@@ -1,0 +1,63 @@
+{
+  "id": "./",
+  "name": "Ödeme Takip · 2026 Mobil Finansal Asistan",
+  "short_name": "Ödeme Takip",
+  "description": "Kira, fatura, kredi kartı, abonelik ve sigorta ödemelerini takip eden çevrimdışı finansal asistan.",
+  "lang": "tr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "orientation": "portrait",
+  "background_color": "#070b16",
+  "theme_color": "#070b16",
+  "categories": [
+    "finance",
+    "productivity",
+    "lifestyle"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Yeni ödeme ekle",
+      "short_name": "Ekle",
+      "url": "./?action=add"
+    },
+    {
+      "name": "Özet",
+      "short_name": "Özet",
+      "url": "./?tab=sum"
+    }
+  ]
+}

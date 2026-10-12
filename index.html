@@ -2483,14 +2483,32 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 
   if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
     window.addEventListener("load", function(){
-      /* updateViaCache:"none" → tarayıcı sw.js'i her zaman ağdan kontrol eder; sekmeye dönünce de güncelleme aranır */
+      /* sw.js her kontrol edildiğinde ağdan alınır; bekleyen sürüm kullanıcı onayı olmadan sayfayı yenilemez. */
       var hadController = !!navigator.serviceWorker.controller;
+      var reloadAfterUpdate = false;
+      var promptedWorker = null;
+      function hasUnsavedForm(){ return !!document.getElementById("addForm"); }
+      function offerUpdate(worker){
+        if (!worker || worker === promptedWorker || !navigator.serviceWorker.controller) return;
+        promptedWorker = worker;
+        var warning = hasUnsavedForm() ? " Açık formdaki kaydedilmemiş bilgiler kaybolabilir." : "";
+        if (confirm("Yeni sürüm hazır." + warning + " Şimdi yenilemek ister misiniz?")){
+          reloadAfterUpdate = true;
+          worker.postMessage({ type:"SKIP_WAITING" });
+        }
+      }
       navigator.serviceWorker.register("./sw.js", { scope: "./", updateViaCache: "none" }).then(function(reg){
+        offerUpdate(reg.waiting);
+        reg.addEventListener("updatefound", function(){
+          var worker = reg.installing;
+          if (worker) worker.addEventListener("statechange", function(){ if (worker.state === "installed") offerUpdate(reg.waiting); });
+        });
         document.addEventListener("visibilitychange", function(){ if (!document.hidden){ try { reg.update(); } catch(e){} } });
         setInterval(function(){ try { reg.update(); } catch(e){} }, 30 * 60 * 1000);
       }).catch(function(){});
       navigator.serviceWorker.addEventListener("controllerchange", function(){
-        if (hadController && typeof toast === "function") toast("Yeni sürüm hazır · sayfayı yenile");
+        if (reloadAfterUpdate) location.reload();
+        else if (hadController && confirm("Yeni sürüm etkin. Sayfayı şimdi yenilemek ister misiniz?")) location.reload();
         hadController = true;
       });
     });

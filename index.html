@@ -663,6 +663,10 @@ body.light-theme .count.soon,body.light-theme .soon-main .tag{color:#0e7490}
 body.light-theme .gauge-needle path,body.light-theme .gauge-needle .needle-knob{fill:#1e293b}
 /* === Sekme / ay geçişi === */
 .view{view-transition-name:page}
+/* Ödemeler görünümü, diğer sekmelerden daha uzun olabiliyor. Tarayıcının varsayılan
+   grup boyutu ara animasyonu eski ve yeni anlık görüntüleri çaprazda birleştiriyordu;
+   burada yalnızca yatay eski/yeni geçişini kullanıyoruz. */
+::view-transition-group(page){animation:none}
 ::view-transition-old(page){animation:vtOut .22s ease both}
 ::view-transition-new(page){animation:vtIn .34s cubic-bezier(.2,.8,.2,1) both}
 @keyframes vtOut{to{opacity:0;transform:translateX(calc(var(--vt-x,26px) * -1))}}

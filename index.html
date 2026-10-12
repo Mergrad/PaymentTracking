@@ -663,10 +663,6 @@ body.light-theme .count.soon,body.light-theme .soon-main .tag{color:#0e7490}
 body.light-theme .gauge-needle path,body.light-theme .gauge-needle .needle-knob{fill:#1e293b}
 /* === Sekme / ay geçişi === */
 .view{view-transition-name:page}
-/* Ödemeler görünümü, diğer sekmelerden daha uzun olabiliyor. Tarayıcının varsayılan
-   grup boyutu ara animasyonu eski ve yeni anlık görüntüleri çaprazda birleştiriyordu;
-   burada yalnızca yatay eski/yeni geçişini kullanıyoruz. */
-::view-transition-group(page){animation:none}
 ::view-transition-old(page){animation:vtOut .22s ease both}
 ::view-transition-new(page){animation:vtIn .34s cubic-bezier(.2,.8,.2,1) both}
 @keyframes vtOut{to{opacity:0;transform:translateX(calc(var(--vt-x,26px) * -1))}}
@@ -707,8 +703,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 .vol{width:100%;accent-color:#22d3ee;height:28px}
 @media(prefers-reduced-motion:reduce){.subbox,.subbox .t span{transition:none}}
 
-/* Sekme/ay geçişinde kart giriş animasyonları süresiz kısılır (süre 0), böylece sayfa tek parça kayar */
-.no-rise .pay,.no-rise .soon-row{animation-duration:.001ms!important;animation-delay:0s!important}
+/* Sekme/ay geçişinde kartların ilk giriş karesi anlık görüntüye girmemeli. */
+.no-rise .pay,.no-rise .soon-row{animation:none!important}
 </style>
 </head>
 <body>

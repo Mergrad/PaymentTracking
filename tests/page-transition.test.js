@@ -8,11 +8,9 @@ const transitionCss = source.slice(
 );
 
 assert.ok(transitionCss.includes(".view{view-transition-name:page}"));
-assert.ok(
-  transitionCss.includes("::view-transition-group(page){animation:none}"),
-  "Page-height changes must not receive the browser's default geometry animation."
-);
+assert.ok(!transitionCss.includes("::view-transition-group(page){animation:none}"));
 assert.ok(transitionCss.includes("::view-transition-old(page){animation:vtOut"));
 assert.ok(transitionCss.includes("::view-transition-new(page){animation:vtIn"));
+assert.ok(source.includes(".no-rise .pay,.no-rise .soon-row{animation:none!important}"));
 
 console.log("Page transition CSS: OK");

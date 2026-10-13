@@ -661,6 +661,13 @@ body.light-theme .gauge-needle path,body.light-theme .gauge-needle .needle-knob{
 /* Alt bar/menü ve diğer sabit ögeler varsayılan kök geçişiyle görünüp kayboluyordu;
    kök geçişi kapatılır, yalnızca .view (page) animasyonlanır. */
 ::view-transition-old(root),::view-transition-new(root){animation:none}
+/* Sabit alt bar, kök katmanında kalıp içerik geçişinin altında sızıp "soluyordu"
+   (özellikle yarı saydam backdrop-filter arka planıyla). Kendi katmanına alınır
+   (animasyonsuz) ve geçiş boyunca opak yapılır; böylece geçişten etkilenmez. */
+.navbar{view-transition-name:od-nav}
+::view-transition-group(od-nav){animation:none}
+::view-transition-old(od-nav),::view-transition-new(od-nav){animation:none}
+.vt .navbar{background:linear-gradient(180deg,var(--bg-2),var(--bg));backdrop-filter:none}
 @keyframes vtOut{to{opacity:0;transform:translateX(calc(var(--vt-x,26px) * -1))}}
 @keyframes vtIn{from{opacity:0;transform:translateX(var(--vt-x,26px))}}
 .view.enter{animation:vtIn .34s cubic-bezier(.2,.8,.2,1) both}
@@ -827,7 +834,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.9.3";
+  var VERSION = "2.9.4";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -1484,15 +1491,22 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
        kapatılır. Sınıf üretilen listeye konur; sonradan kaldırılan global bir sınıf
        kullanılmaz (yoksa geçiş bittikten sonra animasyon baştan oynuyordu). */
     pendingRiseSuppress = true;
+    /* Geçiş boyunca sabit alt barı opak tut: yarı saydam hâliyle içerik altından
+       sızıp "soluyor / altında sayfa görünüyor" hissini önler. */
+    root.classList.add("vt");
+    var finish = function(){ root.classList.remove("vt"); };
     if (document.startViewTransition && !prefersReduced()){
       try {
         var vt = document.startViewTransition(function(){ fn(); });
+        if (vt && vt.finished && vt.finished.then) vt.finished.then(finish, finish);
+        else finish();
         /* Hızlı ardışık geçişlerde önceki geçiş iptal edilir; sözü sessizce yut. */
-        if (vt){ if (vt.ready && vt.ready.catch) vt.ready.catch(function(){}); if (vt.finished && vt.finished.catch) vt.finished.catch(function(){}); }
+        if (vt && vt.ready && vt.ready.catch) vt.ready.catch(function(){});
         return;
       } catch(e){}
     }
     fn();
+    finish();
     if (!prefersReduced()){
       view.classList.remove("enter");
       void view.offsetWidth;

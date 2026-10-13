@@ -1,6 +1,6 @@
 {
   "name": "odeme-takip",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "private": true,
   "description": "Kişisel ödemeleri takip eden, çevrimdışı çalışan web uygulaması (PWA).",
   "scripts": {

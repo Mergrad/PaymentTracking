@@ -4,6 +4,14 @@ const vm = require("vm");
 
 const source = fs.readFileSync("index.html", "utf8");
 
+// Sürüm denetimi version.json'a dayanır: dosya index.html'deki VERSION ile eşleşmeli.
+{
+  const versionJson = JSON.parse(fs.readFileSync("version.json", "utf8").replace(/^\uFEFF/, ""));
+  const versionMatch = source.match(/var VERSION = "([^"]+)"/);
+  assert.ok(versionMatch, "index.html içinde VERSION bulunamadı");
+  assert.strictEqual(versionJson.v, versionMatch[1], "version.json ile index.html VERSION eşleşmiyor");
+}
+
 function between(start, end) {
   const from = source.indexOf(start);
   const to = source.indexOf(end, from);

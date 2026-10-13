@@ -28,6 +28,7 @@ assert.ok(source.includes("VERSIONED_ASSETS"));
 assert.ok(source.includes("cache: \"reload\""));
 assert.ok(source.includes("networkFirst(req, isDocument)"));
 assert.ok(source.includes("cacheFirst(req)"));
+assert.ok(source.includes("cache: \"no-store\""), "Sürüm/ağ istekleri no-store ile önbelleği atlamalı.");
 const installBlock = source.slice(source.indexOf('self.addEventListener("install"'), source.indexOf('self.addEventListener("activate"'));
 // Güncellemeler kurulu PWA hiç kapanmasa da devreye girsin: install, mevcut bir
 // etkin sürüm varsa skipWaiting çağırır; ilk kurulumda beklemede kalır.

@@ -65,7 +65,9 @@ self.addEventListener("message", (event) => {
 });
 
 function networkFirst(req, isDocument) {
-  const fresh = new Request(req.url, { cache: "no-cache", credentials: "same-origin" });
+  /* Sorgu ekleyip no-store ile hem tarayıcı HTTP önbelleğini hem (mümkünse) CDN'i atla. */
+  const sep = req.url.indexOf("?") === -1 ? "?" : "&";
+  const fresh = new Request(req.url + sep + "_sw=" + Date.now(), { cache: "no-store", credentials: "same-origin" });
   const network = fetch(fresh).then(async (response) => {
     if (response && response.ok && response.type === "basic") await (await getActiveCache()).put(req, response.clone());
     return response;
@@ -94,6 +96,8 @@ self.addEventListener("fetch", (event) => {
   let url;
   try { url = new URL(req.url); } catch (err) { return; }
   if (url.origin !== self.location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
+  /* Sürüm dosyası asla önbelleğe alınmaz; her zaman ağdan okunur. */
+  if (url.pathname.endsWith("/version.json")) { event.respondWith(fetch(req, { cache: "no-store" })); return; }
   const isDocument = req.mode === "navigate" || req.destination === "document";
   const isAppCode = isDocument || url.pathname.endsWith("/") || /\.(?:html|js|json|css|webmanifest)$/i.test(url.pathname);
   event.respondWith(isAppCode ? networkFirst(req, isDocument) : cacheFirst(req));

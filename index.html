@@ -821,7 +821,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.9.0";
+  var VERSION = "2.9.1";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -2681,6 +2681,22 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var b = document.getElementById("updateBanner");
     if (b) b.classList.add("on");
   }
+  /* Sürüm denetimi: GitHub Pages ~10 dk CDN önbelleği ve tarayıcı önbelleği yüzünden
+     eski sürümde kalan istemcileri, önbelleği atlayan bir istekle yeni sürüme taşır. */
+  function checkDeployedVersion(){
+    var CHECK_KEY = "odeme-takip-version";
+    var attempted = null;
+    try { attempted = sessionStorage.getItem(CHECK_KEY); } catch(e){}
+    fetch("./version.json?cb=" + Date.now(), { cache: "no-store" })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(v){
+        if (!v || !v.v || v.v === VERSION || v.v === attempted) return;
+        try { sessionStorage.setItem(CHECK_KEY, v.v); } catch(e){}
+        /* Yeni sorgu tarayıcı önbelleğini atlar; servis çalışanı varsa ağdan tazelenir. */
+        location.replace(location.pathname + "?v=" + encodeURIComponent(v.v) + location.hash);
+      })
+      .catch(function(){});
+  }
   function checkForUpdate(){
     if (!swReg || !swReg.update){ toast("Güncelleme servisi kullanılamıyor"); return; }
     swReg.update().then(function(){
@@ -2793,6 +2809,13 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       var q = new URLSearchParams(location.search);
       if (TAB_ORDER.indexOf(q.get("tab")) !== -1) tab = q.get("tab");
       wantAdd = q.get("action") === "add";
+      /* Sürüm parametresini (?v=...) adres çubuğundan temizle. */
+      if (q.get("v")){
+        var params = new URLSearchParams(location.search);
+        params.delete("v");
+        var qs = params.toString();
+        try { history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash); } catch(e){}
+      }
     } catch(e){}
     load().then(function(){
       render();
@@ -2815,6 +2838,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (fxValEl) fxValEl.textContent = fmtFx(lastFx);
   }
   applyFxVisibility();
+  checkDeployedVersion();
   /* PIN isteğe bağlıdır: yalnızca önceden belirlenmişse kilit ekranı gelir. */
   if (pinSet()){
     showLock("login");

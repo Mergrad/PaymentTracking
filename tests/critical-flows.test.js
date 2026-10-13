@@ -42,12 +42,23 @@ async function testAmountsAndImports() {
   ["", "-1", "metin", "12,345"].forEach((input) => assert.ok(Number.isNaN(ctx.parseAmount(input))));
 
   const valid = { version: 1, payments: [{ id: 1, cat: "fatura", amount: "1.250,50", due: "2026-02-28", status: "wait", note: "Elektrik", sub: "elektrik", repeat: "monthly" }] };
-  assert.strictEqual(ctx.validate(valid)[0].amount, 1250.5);
-  [
-    { version: 2, payments: [] },
-    { version: 1, payments: [{ cat: "fatura", amount: 10, due: "2026-02-30", status: "wait", repeat: "once" }] },
-    { version: 1, payments: [{ cat: "fatura", amount: 0, due: "2026-02-28", status: "wait", repeat: "once" }] }
-  ].forEach((backup) => assert.throws(() => ctx.validate(backup)));
+  assert.strictEqual(ctx.validate(valid).list[0].amount, 1250.5);
+
+  // Bilinmeyen (gelecek) sürüm reddedilir.
+  assert.throws(() => ctx.validate({ version: 2, payments: [] }));
+
+  // Kurtarılamayan satırlar atlanır; tümü geçersizse liste boş döner (çökmek yerine).
+  assert.strictEqual(ctx.validate({ version: 1, payments: [{ cat: "fatura", amount: 10, due: "2026-02-30", status: "wait", repeat: "once" }] }).list.length, 0);
+  assert.strictEqual(ctx.validate({ version: 1, payments: [{ cat: "fatura", amount: 0, due: "2026-02-28", status: "wait", repeat: "once" }] }).list.length, 0);
+
+  // Geriye dönük uyumluluk: version/repeat/status eksik, bilinmeyen kategori, dizi biçimi.
+  const legacy = [{ id: 5, cat: "bilinmeyen", amount: "100,5", due: "2026-03-01" }];
+  const l0 = ctx.validate(legacy).list[0];
+  assert.strictEqual(l0.cat, "diger");
+  assert.strictEqual(l0.repeat, "once");
+  assert.strictEqual(l0.status, "wait");
+  assert.strictEqual(l0.amount, 100.5);
+  assert.strictEqual(ctx.validate([{ cat: "fatura", amount: 5, due: "bozuk" }]).skipped, 1);
 }
 
 async function testStorageAndMigration() {

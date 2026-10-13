@@ -821,7 +821,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.9.1";
+  var VERSION = "2.9.2";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -2453,37 +2453,53 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   function validateImportedPayments(data){
-    if (!data || (Array.isArray(data) ? false : data.version !== 1)) throw new Error("unsupported-version");
+    /* Geriye dönük uyumlu: dizi, {payments:[...]} veya {version:1,payments:[...]} kabul.
+       Eksik alanlar varsayılanla doldurulur; kurtarılamayan satırlar atlanır (çökmek yerine). */
+    if (!data || typeof data !== "object") throw new Error("bad-list");
+    if (!Array.isArray(data) && data.version != null && data.version !== 1) throw new Error("unsupported-version");
     var list = Array.isArray(data) ? data : data.payments;
     if (!Array.isArray(list)) throw new Error("bad-list");
-    var seen = {};
-    return list.map(function(p, i){
-      var amount = p && parseAmount(p.amount);
-      if (!p || !CATS[p.cat] || !Number.isFinite(amount) || !isValidISODate(p.due)
-          || ["done","wait","late"].indexOf(p.status) === -1
-          || ["once","monthly"].indexOf(p.repeat) === -1
-          || (p.sub != null && typeof p.sub !== "string") || (p.note != null && typeof p.note !== "string")) {
-        throw new Error("invalid-payment-" + i);
-      }
+    var seen = {}, skipped = 0, out = [];
+    list.forEach(function(p, i){
+      if (!p || typeof p !== "object"){ skipped += 1; return; }
+      var amount = parseAmount(p.amount);
+      if (!Number.isFinite(amount) || !isValidISODate(p.due)){ skipped += 1; return; }
       /* Tekrarlanan ID'ler byId()'in yanlış kaydı bulmasına yol açar; yeniden numaralandır. */
       var id = Number(p.id);
       if (!Number.isFinite(id) || seen[id]) id = Date.now() + i;
       while (seen[id]) id += 1;
       seen[id] = 1;
-      var out = { id:id, cat:p.cat, amount:amount, due:p.due, status:p.status,
-                  note:p.note || "", sub:p.sub || "", repeat:p.repeat };
-      if (p.repeat === "monthly" && Number.isInteger(p.dueDay) && p.dueDay >= 1 && p.dueDay <= 31) out.dueDay = p.dueDay;
-      return out;
+      var repeat = p.repeat === "monthly" ? "monthly" : "once";
+      var item = {
+        id:id,
+        cat: CATS[p.cat] ? p.cat : "diger",
+        amount:amount,
+        due:p.due,
+        status: ["done","wait","late"].indexOf(p.status) !== -1 ? p.status : "wait",
+        note: p.note == null ? "" : String(p.note),
+        sub: p.sub == null ? "" : String(p.sub),
+        repeat:repeat
+      };
+      if (repeat === "monthly" && Number.isInteger(p.dueDay) && p.dueDay >= 1 && p.dueDay <= 31) item.dueDay = p.dueDay;
+      out.push(item);
     });
+    return { list: out, skipped: skipped };
   }
   function importJSON(file){
     var r = new FileReader();
     r.onload = function(){
-      var data = null, imported = null;
+      var data = null, result = null;
       try {
-        data = JSON.parse(String(r.result));
-        imported = validateImportedPayments(data);
-      } catch(e){ toast("Geçersiz yedek dosyası"); Sound.play("error"); return; }
+        /* Baştaki BOM'u temizle: JSON.parse BOM'u sevmez. */
+        data = JSON.parse(String(r.result).replace(/^\uFEFF/, ""));
+        result = validateImportedPayments(data);
+      } catch(e){
+        var reason = e && e.message === "unsupported-version" ? "Bu yedek daha yeni bir uygulama sürümüne ait"
+                   : e && e.message === "bad-list" ? "Yedek dosyası tanınamadı"
+                   : "Geçersiz yedek dosyası";
+        toast(reason); Sound.play("error"); return;
+      }
+      var imported = result.list, skipped = result.skipped;
       if (!imported.length && !confirm("Bu yedek boş. Mevcut tüm ödemelerin yerini boş listeyle değiştirmek istiyor musunuz?")) return;
       /* Yedekle gelen özel fatura türlerini ekle (aynı koda sahip olanlar atlanır). */
       if (data && Array.isArray(data.billTypes)){
@@ -2506,7 +2522,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         applyOverdue();
         if (!save()){ payments = previous; return; }
         render(); closeSheet();
-        toast("Veriler içe aktarıldı"); Sound.play("backup");
+        toast(skipped ? ("Veriler içe aktarıldı · " + skipped + " kayıt atlandı") : "Veriler içe aktarıldı");
+        Sound.play("backup");
       };
       saveBackupSnapshot(Date.now()).then(commit).catch(function(){
         if (confirm("Mevcut verilerin cihaz içi yedeği oluşturulamadı. Yine de içe aktarmak istiyor musunuz?")) commit();

@@ -27,8 +27,9 @@ async function getActiveCacheName() {
   }
   const names = (await caches.keys()).filter((name) => name.indexOf(CACHE_PREFIX) === 0).sort();
   if (!names.length) throw new Error("Uygulama önbelleği bulunamadı");
-  await rememberActiveCache(names[names.length - 1]);
-  return names[0];
+  const chosen = names[names.length - 1];
+  await rememberActiveCache(chosen);
+  return chosen;
 }
 async function getActiveCache() { return caches.open(await getActiveCacheName()); }
 async function installShell() {
@@ -47,7 +48,13 @@ async function installShell() {
   await rememberActiveCache(cacheName);
 }
 
-self.addEventListener("install", (event) => { event.waitUntil(installShell()); });
+self.addEventListener("install", (event) => {
+  event.waitUntil(installShell().then(() => {
+    /* Bu bir güncelleme ise (zaten etkin bir sürüm varsa) beklemeden etkinleş:
+       kurulu PWA hiç kapanmasa da yeni sürüm devreye girsin. İlk kurulumda beklenir. */
+    if (self.registration.active) self.skipWaiting();
+  }));
+});
 self.addEventListener("activate", (event) => {
   event.waitUntil(getActiveCacheName().then((current) => caches.keys().then((names) => Promise.all(names
     .filter((name) => /^odeme-takip-(?:v\d+|shell-)/.test(name) && name !== current)

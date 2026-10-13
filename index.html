@@ -767,6 +767,12 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   </button>
 </div>
 
+<div class="ios-banner" id="updateBanner" role="status">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#c7c9ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+  <div class="txt"><b>Yeni sürüm hazır</b><span>Açık formdaki bilgiler korunur. Hazır olduğunda yenile.</span></div>
+  <button class="btn primary" id="updateReloadBtn" type="button">Yenile</button>
+</div>
+
 <div class="scrim" id="scrim"></div>
 <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Panel">
   <div class="grip" aria-hidden="true"></div>
@@ -815,7 +821,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.8.0";
+  var VERSION = "2.9.0";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -1965,6 +1971,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       + '<div class="kv"><span class="k">Sürüm</span><span class="v">' + VERSION + '</span></div>'
       + '<div class="kv"><span class="k">Kayıt sayısı</span><span class="v">' + payments.length + '</span></div>'
       + '<div class="kv"><span class="k">Depolama</span><span class="v">localStorage</span></div>'
+      + '<div class="set-row"><div class="txt"><b>Güncellemeyi denetle</b><span>Yeni sürüm var mı diye hemen kontrol et.</span></div><button class="btn" id="checkUpdateBtn" type="button">Denetle</button></div>'
+      + '<div class="set-row"><div class="txt"><b>Önbelleği temizle ve yenile</b><span>Sorun çıkarsa kullan; kayıtlar silinmez.</span></div><button class="btn danger" id="clearCacheBtn" type="button">Temizle</button></div>'
       + '</div>'
       + '<p class="hint">iPhone/iPad: Safari\'de Paylaş simgesine dokun, ardından "Ana Ekrana Ekle" seç.</p>'
       + '</div>';
@@ -2224,6 +2232,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (btn.id === "changePinBtn"){ clearPin(); showLock("setup"); return; }
     if (btn.id === "removePinBtn"){ clearPin(); toast("PIN kaldırıldı"); render(); return; }
     if (btn.id === "settingsInstall"){ doInstall(); return; }
+    if (btn.id === "checkUpdateBtn"){ checkForUpdate(); return; }
+    if (btn.id === "clearCacheBtn"){ clearCacheAndReload(); return; }
     if (btn.hasAttribute("data-act")){
       handleAction(btn.getAttribute("data-act"), +btn.getAttribute("data-id"));
     }
@@ -2665,36 +2675,77 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     try { localStorage.setItem("odeme-takip-ios-hint", "1"); } catch(e){}
   });
 
+  /* ---------- Güncelleme: otomatik etkinleştir + görünür "Yenile" bandı ---------- */
+  var swReg = null;
+  function showUpdateBanner(){
+    var b = document.getElementById("updateBanner");
+    if (b) b.classList.add("on");
+  }
+  function checkForUpdate(){
+    if (!swReg || !swReg.update){ toast("Güncelleme servisi kullanılamıyor"); return; }
+    swReg.update().then(function(){
+      if (swReg.installing || swReg.waiting) toast("Yeni sürüm bulundu, hazırlanıyor…");
+      else toast("Uygulama güncel");
+    }).catch(function(){ toast("Güncelleme denetlenemedi"); });
+  }
+  /* Servis çalışanını ve önbellekleri sıfırlar (kayıtlar/ayarlar silinmez), sonra yeniler. */
+  function clearCacheAndReload(){
+    var tasks = [];
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+        tasks.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+          return Promise.all(regs.map(function(r){ return r.unregister(); }));
+        }));
+      }
+      if (window.caches && caches.keys){
+        tasks.push(caches.keys().then(function(keys){
+          return Promise.all(keys.map(function(k){ return caches.delete(k); }));
+        }));
+      }
+    } catch(e){}
+    Promise.all(tasks).catch(function(){}).then(function(){ location.reload(); });
+  }
+
   if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
     window.addEventListener("load", function(){
-      /* sw.js her kontrol edildiğinde ağdan alınır; bekleyen sürüm kullanıcı onayı olmadan sayfayı yenilemez. */
+      /* Yeni sürüm arka planda etkinleşir; açık form yoksa sayfa kendini yeniler,
+         varsa görünür "Yenile" bandı gösterilir (kaydedilmemiş veri korunur). */
       var hadController = !!navigator.serviceWorker.controller;
-      var reloadAfterUpdate = false;
-      var promptedWorker = null;
+      var reloadedForUpdate = false;
+      try { reloadedForUpdate = sessionStorage.getItem("odeme-takip-updated") === "1"; } catch(e){}
       function hasUnsavedForm(){ return !!document.getElementById("addForm"); }
-      function offerUpdate(worker){
-        if (!worker || worker === promptedWorker || !navigator.serviceWorker.controller) return;
-        promptedWorker = worker;
-        var warning = hasUnsavedForm() ? " Açık formdaki kaydedilmemiş bilgiler kaybolabilir." : "";
-        if (confirm("Yeni sürüm hazır." + warning + " Şimdi yenilemek ister misiniz?")){
-          reloadAfterUpdate = true;
-          worker.postMessage({ type:"SKIP_WAITING" });
-        }
+      function reloadForUpdate(){
+        try { sessionStorage.setItem("odeme-takip-updated", "1"); } catch(e){}
+        location.reload();
+      }
+      function handleUpdateReady(worker){
+        if (!navigator.serviceWorker.controller) return;
+        if (hasUnsavedForm()){ showUpdateBanner(); return; }
+        if (worker && worker.state !== "activated"){ try { worker.postMessage({ type:"SKIP_WAITING" }); } catch(e){} }
       }
       navigator.serviceWorker.register("./sw.js", { scope: "./", updateViaCache: "none" }).then(function(reg){
-        offerUpdate(reg.waiting);
+        swReg = reg;
+        if (reg.waiting) handleUpdateReady(reg.waiting);
         reg.addEventListener("updatefound", function(){
           var worker = reg.installing;
-          if (worker) worker.addEventListener("statechange", function(){ if (worker.state === "installed") offerUpdate(reg.waiting); });
+          if (!worker) return;
+          worker.addEventListener("statechange", function(){
+            if (worker.state === "installed") handleUpdateReady(reg.waiting || worker);
+          });
         });
         document.addEventListener("visibilitychange", function(){ if (!document.hidden){ try { reg.update(); } catch(e){} } });
-        setInterval(function(){ try { reg.update(); } catch(e){} }, 30 * 60 * 1000);
+        window.addEventListener("focus", function(){ try { reg.update(); } catch(e){} });
+        setInterval(function(){ try { reg.update(); } catch(e){} }, 15 * 60 * 1000);
       }).catch(function(){});
       navigator.serviceWorker.addEventListener("controllerchange", function(){
-        if (reloadAfterUpdate) location.reload();
-        else if (hadController && confirm("Yeni sürüm etkin. Sayfayı şimdi yenilemek ister misiniz?")) location.reload();
+        if (hadController){
+          if (hasUnsavedForm()) showUpdateBanner();
+          else if (!reloadedForUpdate) reloadForUpdate();
+        }
         hadController = true;
       });
+      var reloadBtn = document.getElementById("updateReloadBtn");
+      if (reloadBtn) reloadBtn.addEventListener("click", function(){ location.reload(); });
     });
   }
   window.addEventListener("focus", function(){ if (appStarted) checkReminders(false); });

@@ -29,7 +29,10 @@ assert.ok(source.includes("cache: \"reload\""));
 assert.ok(source.includes("networkFirst(req, isDocument)"));
 assert.ok(source.includes("cacheFirst(req)"));
 const installBlock = source.slice(source.indexOf('self.addEventListener("install"'), source.indexOf('self.addEventListener("activate"'));
-assert.ok(!installBlock.includes("skipWaiting"));
+// Güncellemeler kurulu PWA hiç kapanmasa da devreye girsin: install, mevcut bir
+// etkin sürüm varsa skipWaiting çağırır; ilk kurulumda beklemede kalır.
+assert.ok(installBlock.includes("self.registration.active"));
+assert.ok(installBlock.includes("self.skipWaiting()"));
 assert.notStrictEqual(context.shellHash(["index-v1", "payments", "manifest"]), context.shellHash(["index-v2", "payments", "manifest"]));
 
 listeners.message({ data: { type: "SKIP_WAITING" } });

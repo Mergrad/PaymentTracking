@@ -1,0 +1,9 @@
+{
+  "name": "odeme-takip",
+  "version": "2.8.0",
+  "private": true,
+  "description": "Kişisel ödemeleri takip eden, çevrimdışı çalışan web uygulaması (PWA).",
+  "scripts": {
+    "test": "node tests/critical-flows.test.js && node tests/page-transition.test.js && node tests/pwa-update.test.js"
+  }
+}

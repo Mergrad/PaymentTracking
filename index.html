@@ -7,6 +7,7 @@
 <meta name="description" content="Kişisel ödemeleri takip eden, çevrimdışı çalışan, verileri sadece cihazda tutan PWA." />
 <meta name="theme-color" content="#070b16" />
 <meta name="color-scheme" content="dark" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://data-api.binance.vision; object-src 'none'; base-uri 'self'; form-action 'none'" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -102,17 +103,17 @@ button{cursor:pointer}
   .brand{gap:9px}
   .logo{width:38px;height:38px;border-radius:13px}
   .logo svg{width:20px;height:20px}
-  .fx-rate{padding:0 10px}
   .fx-rate .fx-unit{display:none}
 }
 @media (max-width:360px){ .brand p{display:none} }
 @media (max-width:340px){ .logo{display:none} .top-actions{gap:6px} }
 .top-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .fx-rate{
+  --fx-inner:#0f1426;
   display:flex;align-items:center;gap:6px;min-height:44px;padding:0 11px;
-  border-radius:14px;border:1px solid var(--stroke);background:var(--surface);
-  color:var(--text);backdrop-filter:blur(14px);white-space:nowrap;
-  box-shadow:0 8px 20px -14px rgba(34,211,238,.65);
+  position:relative;overflow:hidden;isolation:isolate;
+  border-radius:12px;border:1px solid var(--stroke);background:var(--surface);
+  color:var(--text);cursor:pointer;backdrop-filter:blur(14px);white-space:nowrap;box-shadow:none;
 }
 .fx-rate .fx-symbol{font-size:11px;font-weight:800;color:#c7c9ff;letter-spacing:.2px}
 .fx-rate .fx-value{font-size:12px;font-weight:750;letter-spacing:-.2px}
@@ -283,20 +284,6 @@ button{cursor:pointer}
 .kv .k{font-size:12.5px;color:var(--muted);font-weight:550}
 .kv .v{font-size:13.5px;font-weight:750}
 
-/* Category chart: values stay readable on narrow mobile screens. */
-.category-chart{display:grid;gap:15px;padding-top:3px}
-.cat-row{display:grid;gap:8px}
-.cat-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
-.cat-name{display:flex;align-items:center;gap:9px;min-width:0}
-.cat-top .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 4px color-mix(in srgb,var(--cat-color) 13%,transparent)}
-.cat-top .nm{font-size:13px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cat-value{display:flex;align-items:baseline;justify-content:flex-end;gap:7px;white-space:nowrap}
-.cat-top .vl{font-size:13.5px;font-weight:800;letter-spacing:-.25px}
-.cat-top .pc{font-size:11px;color:var(--muted);font-weight:650}
-.cat-bar{height:9px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
-.cat-bar span{display:block;height:100%;border-radius:999px;transition:width .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 14px color-mix(in srgb,var(--cat-color) 55%,transparent)}
-
-
 /* Modern square category map shared by Summary and Annual views */
 .donut-wrap{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:12px;margin:2px 0 18px}
 .donut{position:relative;width:min(100%,320px);aspect-ratio:1/1;display:block;isolation:isolate}
@@ -321,7 +308,7 @@ button{cursor:pointer}
 .cat-top .vl{font-size:clamp(12px,3.4vw,14px);font-weight:850;letter-spacing:-.35px;overflow:hidden;text-overflow:ellipsis}
 .cat-top .pc{font-size:10.5px;color:var(--muted);font-weight:750;flex:0 0 auto}
 .cat-bar{height:5px;border-radius:999px;background:rgba(148,163,184,.16);overflow:hidden}
-.cat-bar span{display:block;height:100%;border-radius:999px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.cat-bar span{display:block;height:100%;border-radius:999px;transition:width .6s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 14px color-mix(in srgb,var(--cat-color) 55%,transparent)}
 @keyframes tileIn{from{opacity:0;transform:translateY(7px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 body.light-theme .square-tile{color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 7px 18px -14px var(--tile-color)}
 body.light-theme .cat-row{background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,250,252,.72));box-shadow:0 6px 18px -18px rgba(15,23,42,.4)}
@@ -346,8 +333,7 @@ body.light-theme .cat-row{background:linear-gradient(145deg,rgba(255,255,255,.96
 
 /* Animated semicircle gauge */
 .gauge-wrap{width:100%;max-width:510px;margin:8px auto 16px;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:8px}
-.gauge-svg{display:block;width:min(100%,320px);height:auto;overflow:visible;touch-action:manipulation}.gauge-segment{cursor:pointer;pointer-events:stroke;stroke-width:14;transition:opacity .2s,filter .2s}.gauge-segment.is-active{filter:brightness(1.08)}
-.gauge-segment{opacity:1;stroke-dasharray:none;stroke-dashoffset:0;animation:none;transition:opacity .2s,filter .2s;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
+.gauge-svg{display:block;width:min(100%,320px);height:auto;overflow:visible;touch-action:manipulation}
 .gauge-needle{transform-box:view-box;transform-origin:100px 100px;transition:transform 1s cubic-bezier(0.4, 0, 0.2, 1);will-change:transform}
 .category-overview .category-chart{display:none!important}
 .gauge-center{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:2px;z-index:1;min-height:65px;text-align:center}
@@ -407,7 +393,7 @@ body.light-theme .cat-row{background:linear-gradient(145deg,rgba(255,255,255,.96
 .scrim.on{opacity:1;visibility:visible}
 .sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:100%;max-width:440px;z-index:50;
   background:linear-gradient(180deg,#0d1425,#080d18);border:1px solid var(--stroke);border-bottom:none;
-  border-radius:26px 26px 0 0;padding:10px 20px calc(22px + var(--safe-b));max-height:88dvh;overflow-y:auto;
+  border-radius:26px 26px 0 0;padding:10px 20px calc(22px + var(--safe-b));max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;
   transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 .sheet.on{transform:translate(-50%,0)}
 .sheet .grip{width:42px;height:4px;border-radius:999px;background:var(--stroke-2);margin:4px auto 16px}
@@ -542,12 +528,7 @@ body.light-theme .cat-row{background:linear-gradient(145deg,rgba(255,255,255,.96
 
 
 /* ---------- Kur butonu: dönen ışık çerçevesi (buton_1.html tarzı) ---------- */
-.fx-rate{
-  --fx-inner:#0f1426;
-  position:relative; overflow:hidden; isolation:isolate; min-height:44px;
-  border:1px solid var(--stroke); border-radius:12px;
-  background:var(--surface); color:var(--text); cursor:pointer; box-shadow:none;
-}
+/* Temel .fx-rate kuralları yukarıda tek blokta birleştirildi. */
 body.light-theme .fx-rate{--fx-inner:#ffffff}
 .fx-rate > *{position:relative;z-index:2}
 
@@ -650,7 +631,7 @@ body.light-theme .count.soon,body.light-theme .soon-main .tag{color:#0e7490}
 
 
 /* === Gösterge animasyonu === */
-.gauge-segment{stroke-width:16;stroke-dasharray:1 1;stroke-dashoffset:1;opacity:1;transition:stroke-dashoffset .7s cubic-bezier(.3,.7,.2,1) var(--sd,0ms),opacity .5s,filter .5s,stroke-width .5s;filter:none}
+.gauge-segment{cursor:pointer;pointer-events:stroke;stroke-width:16;stroke-dasharray:1 1;stroke-dashoffset:1;opacity:1;animation:none;transition:stroke-dashoffset .7s cubic-bezier(.3,.7,.2,1) var(--sd,0ms),opacity .5s,filter .5s,stroke-width .5s;filter:none}
 .gauge-svg.drawn .gauge-segment{stroke-dashoffset:0}
 .gauge-svg.drawn.has-sel .gauge-segment:not(.is-active){opacity:.5}
 .gauge-svg .gauge-segment.is-active{opacity:1;stroke-width:18;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--cat-color) 55%,transparent))}
@@ -662,7 +643,16 @@ body.light-theme .count.soon,body.light-theme .soon-main .tag{color:#0e7490}
 @keyframes gFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 body.light-theme .gauge-needle path,body.light-theme .gauge-needle .needle-knob{fill:#1e293b}
 /* === Sekme / ay geçişi === */
-.view{view-transition-name:page}
+/* display:flow-root: .monthbar'ın 14px üst boşluğu .view dışına taşmasın.
+   Aksi halde Ödemeler sekmesinde .view 86px, diğerlerinde 72px'ten başlıyor
+   ve her geçişte grup 14px kayıyordu. */
+.view{view-transition-name:page;display:flow-root}
+/* Tarayıcının varsayılan grup animasyonu, grup kutusunun YÜKSEKLİĞİNİ ve
+   DİKEY KONUMUNU eski anlık görüntüden yenisine morph'lar. Bu, yatay
+   kaydırma geçişinin üstüne "kayma" bindiriyordu (ölçüldü: kaydırılmış
+   ödemeler sayfasından çıkarken 291px dikey kayma, Ayarlar'a geçişte %123
+   yükseklik değişimi). Geçişte yalnızca yatay kaydırma kalsın. */
+::view-transition-group(page){animation:none}
 ::view-transition-old(page){animation:vtOut .22s ease both}
 ::view-transition-new(page){animation:vtIn .34s cubic-bezier(.2,.8,.2,1) both}
 @keyframes vtOut{to{opacity:0;transform:translateX(calc(var(--vt-x,26px) * -1))}}
@@ -708,6 +698,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 </style>
 </head>
 <body>
+<noscript><div style="position:fixed;inset:0;z-index:99;background:#070b16;color:#eef1fb;display:grid;place-items:center;padding:24px;text-align:center;font-family:system-ui,sans-serif">Bu uygulama çalışmak için JavaScript gerektirir. Lütfen JavaScript'i etkinleştirip sayfayı yenileyin.</div></noscript>
 <div class="app">
   <header class="topbar">
     <div class="brand">
@@ -824,7 +815,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.7.0";
+  var VERSION = "2.8.0";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -844,12 +835,30 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var _now = new Date();
   var month = _now.getMonth(), year = _now.getFullYear();
   var filter = "all", tab = "pay", sheetKind = "", editId = null;
-  var settings = { backupInterval:"off", notifyDays:3, lastBackup:0, motion:"system", sound:true, volume:0.6, billTypes:[] };
+  var settings = { backupInterval:"off", notifyDays:3, lastBackup:0, motion:"system", sound:true, volume:0.6, billTypes:[], fx:true };
 
   /* ---------- Helpers ---------- */
   function byId(id){ for (var i=0;i<payments.length;i++){ if (payments[i].id===id) return payments[i]; } return null; }
-  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
   function tl(n){ return "₺" + Number(n).toLocaleString("tr-TR", { minimumFractionDigits:Number(n)%1 ? 2 : 0, maximumFractionDigits:2 }); }
+  function parseAmount(value){
+    var input = String(value == null ? "" : value).trim().replace(/\s/g, "");
+    if (!input) return NaN;
+    if (input.indexOf(",") !== -1){
+      if (!/^(?:\d{1,3}(?:\.\d{3})*|\d+),\d{1,2}$/.test(input)) return NaN;
+      input = input.replace(/\./g, "").replace(",", ".");
+    } else if (!/^\d+(?:\.\d{1,2})?$/.test(input)) {
+      return NaN;
+    }
+    var amount = Number(input);
+    return Number.isFinite(amount) && amount > 0 ? Math.round(amount * 100) / 100 : NaN;
+  }
+  function isValidISODate(value){
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ""))) return false;
+    var parts = value.split("-");
+    var date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+    return date.getFullYear() === +parts[0] && date.getMonth() === +parts[1] - 1 && date.getDate() === +parts[2];
+  }
   function compactTL(n){
     n = Number(n) || 0;
     if (n < 1000) return "₺" + n;
@@ -944,9 +953,17 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   })();
 
   /* ---------- Storage ---------- */
-  function save(){ try { localStorage.setItem(KEY, JSON.stringify({ version:1, payments:payments, seeded:true })); } catch(e){} }
+  function save(){
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ version:1, payments:payments, seeded:true }));
+      return true;
+    } catch(e){
+      toast("Ödemeler cihaz depolamasına kaydedilemedi. Alanı kontrol edip tekrar deneyin.");
+      return false;
+    }
+  }
   function load(){
-    var raw = null, seeded = false;
+    var raw = null, seeded = false, hasStoredPayments = false;
     try { raw = localStorage.getItem(KEY); } catch(e){}
 
     if (raw){
@@ -955,6 +972,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         if (data && Array.isArray(data.payments)){
           payments = data.payments;
           seeded = !!data.seeded;
+          hasStoredPayments = true;
         }
       } catch(e){ payments = []; }
     }
@@ -962,7 +980,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var migrated = false;
     try { migrated = localStorage.getItem("odeme-takip-history-v3") === "1"; } catch(e){}
 
-    if (!migrated){
+    if (!migrated && !hasStoredPayments){
       return mergeHistoricalData().then(function(){
         applyOverdue();
       }).catch(function(){
@@ -972,7 +990,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       });
     }
 
-    if (!payments.length && !seeded){
+    if (!hasStoredPayments && !payments.length && !seeded){
       return mergeHistoricalData().then(function(){
         applyOverdue();
       }).catch(function(){
@@ -987,7 +1005,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
   /* ---------- Harici başlangıç verileri ---------- */
   function loadInitialPaymentsFromData(){
-    var data = window.ODemeTakipInitialData;
+    var data = window.OdemeTakipInitialData;
+    if (!Array.isArray(data)) data = window.ODemeTakipInitialData; /* eski ad, geriye dönük uyumluluk */
     if (!Array.isArray(data)) throw new Error("payments.js başlangıç verileri bulunamadı");
     return data.map(function(p){
       return {
@@ -1067,6 +1086,21 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   /* Kur metninin genişliği hiç değişmesin diye her zaman 2 ondalık gösterilir;
      güncelleme sırasında son değer ekranda kalır ("—" ile değiştirilmez). */
   var lastFx = null;
+  var FX_CACHE_KEY = "odeme-takip-fx";
+  function loadCachedFx(){
+    try {
+      var raw = localStorage.getItem(FX_CACHE_KEY);
+      if (!raw) return;
+      var obj = JSON.parse(raw);
+      if (obj && typeof obj.v === "number" && isFinite(obj.v)) lastFx = obj.v;
+    } catch(e){}
+  }
+  function saveCachedFx(v){ try { localStorage.setItem(FX_CACHE_KEY, JSON.stringify({ v:v, t:Date.now() })); } catch(e){} }
+  /* Kur göstergesi Ayarlar'dan kapatılabilir; kapalıyken Binance'e istek gitmez. */
+  function applyFxVisibility(){
+    var box = document.getElementById("fxRate");
+    if (box) box.hidden = settings.fx === false;
+  }
   function fmtFx(v){
     return v.toLocaleString("tr-TR", { minimumFractionDigits:2, maximumFractionDigits:2 });
   }
@@ -1098,7 +1132,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 
     renderFX(null, "loading");
     var started = performance.now();
-    var minDuration = 3000;
+    var minDuration = 1200;
     var rate = null;
     var failed = false;
 
@@ -1126,6 +1160,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         box.classList.remove("loading");
         if (!failed && rate !== null){
           lastFx = rate;
+          saveCachedFx(rate);
           val.textContent = fmtFx(rate);
           box.classList.add("success");
           setTimeout(function(){
@@ -1145,15 +1180,58 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     for (var i=0;i<str.length;i++){ h = ((h<<5)+h) ^ str.charCodeAt(i); }
     return (h >>> 0).toString(16);
   }
+  var PIN_SALT_KEY = "odeme-takip-pin-salt";
+  var LOCKOUT_KEY = "odeme-takip-lock";
   function pinSet(){ try { return !!localStorage.getItem(PIN_KEY); } catch(e){ return false; } }
-  function setPin(pin){ try { localStorage.setItem(PIN_KEY, simpleHash(pin)); } catch(e){} }
-  function clearPin(){ try { localStorage.removeItem(PIN_KEY); } catch(e){} }
-  function verifyPin(pin){ try { return localStorage.getItem(PIN_KEY) === simpleHash(pin); } catch(e){ return false; } }
+  function getPinSalt(){
+    try {
+      var salt = localStorage.getItem(PIN_SALT_KEY);
+      if (salt) return salt;
+      var bytes = new Uint8Array(16);
+      if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+      else for (var i=0;i<bytes.length;i++) bytes[i] = Math.floor(Math.random()*256);
+      salt = Array.prototype.map.call(bytes, function(b){ return ("0"+b.toString(16)).slice(-2); }).join("");
+      localStorage.setItem(PIN_SALT_KEY, salt);
+      return salt;
+    } catch(e){ return "nosalt"; }
+  }
+  /* PIN, tuzlu SHA-256 ile saklanır (WebCrypto yoksa tuzlu basit hash'e düşer). */
+  function hashPin(pin, salt){
+    if (window.crypto && crypto.subtle && window.TextEncoder){
+      return crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pin)).then(function(buf){
+        return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ("0"+b.toString(16)).slice(-2); }).join("");
+      }).catch(function(){ return "fb" + simpleHash(salt + ":" + pin); });
+    }
+    return Promise.resolve("fb" + simpleHash(salt + ":" + pin));
+  }
+  function setPin(pin){
+    return hashPin(pin, getPinSalt()).then(function(h){
+      try { localStorage.setItem(PIN_KEY, "v2:" + h); } catch(e){}
+    });
+  }
+  function clearPin(){ try { localStorage.removeItem(PIN_KEY); localStorage.removeItem(LOCKOUT_KEY); } catch(e){} }
+  /* { ok, upgrade } döner; upgrade = eski zayıf hash ile giriş yapıldı, güçlü formata taşınmalı. */
+  function verifyPin(pin){
+    var stored = null;
+    try { stored = localStorage.getItem(PIN_KEY); } catch(e){}
+    if (!stored) return Promise.resolve({ ok:false, upgrade:false });
+    if (stored.indexOf("v2:") === 0){
+      return hashPin(pin, getPinSalt()).then(function(h){ return { ok: stored === "v2:" + h, upgrade:false }; });
+    }
+    var legacyOk = stored === simpleHash(pin);
+    return Promise.resolve({ ok:legacyOk, upgrade:legacyOk });
+  }
 
   var lockMode = "", lockPin = "", lockFirstPin = "", lockAttempts = 0, lockLockUntil = 0, appStarted = false;
 
   function showLock(mode){
     lockMode = mode; lockPin = ""; lockFirstPin = ""; lockAttempts = 0;
+    if (mode === "login"){
+      /* Kalıcı kilitleme: yanlış denemeler sayfa yenilense de hatırlanır. */
+      try { lockLockUntil = +localStorage.getItem(LOCKOUT_KEY) || 0; } catch(e){ lockLockUntil = 0; }
+    } else {
+      lockLockUntil = 0;
+    }
     var lock = document.getElementById("lock");
     lock.hidden = false;
     updateLockUI();
@@ -1205,25 +1283,35 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var err = document.getElementById("lockErr");
     err.hidden = true;
     if (lockMode === "login"){
-      if (verifyPin(lockPin)){
-        hideLock(); startApp();
-      } else {
-        lockAttempts++; lockPin = ""; renderLockDots();
-        if (lockAttempts >= 3){
-          lockLockUntil = Date.now() + 30000; lockAttempts = 0;
-          err.textContent = "3 yanlış deneme. 30 saniye bekleyin.";
+      verifyPin(lockPin).then(function(res){
+        if (res.ok){
+          /* Eski zayıf hash ile giriş yapıldıysa ilk fırsatta güçlü formata taşı. */
+          if (res.upgrade) setPin(lockPin);
+          lockLockUntil = 0;
+          try { localStorage.removeItem(LOCKOUT_KEY); } catch(e){}
+          hideLock(); startApp();
         } else {
-          err.textContent = "Yanlış PIN. Kalan deneme: " + (3 - lockAttempts);
+          lockAttempts++; lockPin = ""; renderLockDots();
+          if (lockAttempts >= 3){
+            lockLockUntil = Date.now() + 30000; lockAttempts = 0;
+            /* Kilitleme durumunu sakla: sayfa yenilenerek aşılamasın. */
+            try { localStorage.setItem(LOCKOUT_KEY, String(lockLockUntil)); } catch(e){}
+            err.textContent = "3 yanlış deneme. 30 saniye bekleyin.";
+          } else {
+            err.textContent = "Yanlış PIN. Kalan deneme: " + (3 - lockAttempts);
+          }
+          err.hidden = false; updateLockUI();
         }
-        err.hidden = false; updateLockUI();
-      }
+      });
     } else if (lockMode === "setup"){
       lockFirstPin = lockPin; lockPin = ""; lockMode = "confirm"; updateLockUI();
     } else if (lockMode === "confirm"){
       if (lockPin === lockFirstPin){
-        setPin(lockPin); lockPin = ""; hideLock();
-        if (!appStarted){ startApp(); toast("PIN belirlendi"); }
-        else { toast("PIN belirlendi"); render(); }
+        setPin(lockPin).then(function(){
+          lockPin = ""; hideLock();
+          if (!appStarted){ startApp(); toast("PIN belirlendi"); }
+          else { toast("PIN belirlendi"); render(); }
+        });
       } else {
         lockPin = ""; lockMode = "setup"; updateLockUI();
         err.textContent = "PIN'ler eşleşmedi. Tekrar belirle."; err.hidden = false;
@@ -1286,21 +1374,28 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   /* ---------- Yaklaşan Ödemeler: vadesine 1 gün kalanlar ---------- */
   function soonHTML(){
     var t = todayMid();
-    var tm = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1);
-    var iso = tm.getFullYear() + "-" + pad(tm.getMonth()+1) + "-" + pad(tm.getDate());
-    var items = payments.filter(function(p){ return p.status !== "done" && p.due === iso; })
-      .sort(function(a,b){ return b.amount - a.amount; });
-    var h = '<div class="sec-head soon"><h2>Yaklaşan Ödemeler</h2><span class="count soon">Yarın · ' + items.length + '</span></div>';
+    var days = settings.notifyDays || 3;
+    var items = payments.filter(function(p){
+      if (p.status === "done") return false;
+      var diff = Math.round((parseISO(p.due) - t) / 86400000);
+      return diff >= 0 && diff <= days;
+    }).sort(function(a,b){
+      if (a.due !== b.due) return a.due < b.due ? -1 : 1;
+      return b.amount - a.amount;
+    });
+    var h = '<div class="sec-head soon"><h2>Yaklaşan Ödemeler</h2><span class="count soon">' + (days === 1 ? "Yarın" : days + " gün içinde") + ' · ' + items.length + '</span></div>';
     if (!items.length){
-      return h + '<div class="soon-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Yarın vadesi dolan ödeme yok</div>';
+      return h + '<div class="soon-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Önümüzdeki ' + days + ' günde vadesi dolan ödeme yok</div>';
     }
     h += '<div class="soon-list">';
     items.forEach(function(p, i){
       var c = CATS[p.cat] || CATS.fatura;
       var d = parseISO(p.due);
+      var diff = Math.round((d - t) / 86400000);
+      var tag = diff <= 0 ? "Bugün" : (diff === 1 ? "Yarın" : diff + " gün");
       h += '<div class="soon-row" data-id="' + p.id + '" style="--accent:' + c.color + ';animation-delay:' + (i*60) + 'ms">'
         + '<div class="soon-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + c.icon + '</svg></div>'
-        + '<div class="soon-main"><b>' + esc(c.label) + '</b><span><i class="tag">Yarın</i>' + d.getDate() + ' ' + MONTHS[d.getMonth()] + (p.note ? ' · ' + esc(p.note) : '') + '</span></div>'
+        + '<div class="soon-main"><b>' + esc(c.label) + '</b><span><i class="tag">' + tag + '</i>' + d.getDate() + ' ' + MONTHS[d.getMonth()] + (p.note ? ' · ' + esc(p.note) : '') + '</span></div>'
         + '<span class="soon-amt">' + tl(p.amount) + '</span>'
         + '<button class="soon-ok" data-act="pay" data-id="' + p.id + '" type="button" aria-label="Ödendi yap" title="Ödendi yap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg></button>'
         + '</div>';
@@ -1846,6 +1941,15 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       + '<div class="set-row"><div class="txt"><b>Sesi dene</b><span>Ödendi, geri al, sil, yedek ve hata anlarında kısa sesler çalar. Android\'de kısa titreşim de verir.</span></div><button class="btn" id="soundTestBtn" type="button">Dene</button></div>'
       + '</div>';
 
+    /* Kur */
+    html += '<div class="card"><h3>Kur Göstergesi</h3>'
+      + '<div class="set-col"><span class="lbl">USDT/TRY kurunu göster ve güncelle</span><div class="seg-set">'
+      + '<label><input type="radio" name="fx" value="on"' + (settings.fx !== false ? " checked" : "") + ' /> Açık</label>'
+      + '<label><input type="radio" name="fx" value="off"' + (settings.fx === false ? " checked" : "") + ' /> Kapalı</label>'
+      + '</div></div>'
+      + '<p class="hint">Kapalıyken Binance kuru için istek gönderilmez; son kur cihazda saklanır ve çevrimdışı gösterilir.</p>'
+      + '</div>';
+
     /* Data */
     html += '<div class="card"><h3>Veri</h3>'
       + '<div class="set-row"><div class="txt"><b>JSON dışa aktar</b><span>Tüm ödemeleri yedek dosyası olarak indir.</span></div><button class="btn" id="exportBtn" type="button">Dışa Aktar</button></div>'
@@ -1960,7 +2064,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         + '<label class="fl"><span>Kategori</span><select name="cat" required>' + opts + '</select></label>'
         + '<div class="fl" id="subWrap"' + ((p ? p.cat : "kira") === "fatura" ? "" : " hidden") + '><span>Fatura türü</span><div id="subChips" class="subchips">' + subChipsHTML(p ? (p.sub || "") : "") + '</div>'
         + '<div class="sub-new" id="subNew" hidden><input id="subNewName" type="text" maxlength="16" placeholder="Tür adı (örn. Aidat)" /><button class="btn primary" type="button" data-sub-save>Ekle</button></div></div>'
-        + '<label class="fl"><span>Tutar (₺)</span><input name="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="0" value="' + (p?p.amount:"") + '" required /></label>'
+        + '<label class="fl"><span>Tutar (₺)</span><input name="amount" type="text" inputmode="decimal" placeholder="0,00" value="' + (p?p.amount:"") + '" required /></label>'
         + '<label class="fl"><span>Vade</span><input name="due" type="date" value="' + (p?p.due:todayISO()) + '" required /></label>'
         + '<label class="fl"><span>Not</span><input name="note" type="text" maxlength="80" placeholder="Örn. Mart 2026 elektrik" value="' + esc(p?p.note:"") + '" /></label>'
         + '<div class="fl"><span>Tekrar</span><div class="seg">'
@@ -1995,6 +2099,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     }
     scrim.classList.add("on");
     sheet.classList.add("on");
+    document.documentElement.style.overflow = "hidden";
     if (kind === "add" || kind === "edit"){
       var first = sheetBody.querySelector("select");
       if (first) setTimeout(function(){ first.focus(); }, 250);
@@ -2003,6 +2108,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   function closeSheet(){
     scrim.classList.remove("on");
     sheet.classList.remove("on");
+    document.documentElement.style.overflow = "";
     sheetKind = ""; editId = null;
   }
 
@@ -2021,35 +2127,49 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   /* ---------- Actions ---------- */
-  function nextMonthDue(iso){
+  function nextMonthDue(iso, anchorDay){
     var d = parseISO(iso), m = d.getMonth()+1, y = d.getFullYear();
     if (m > 11){ m = 0; y += 1; }
-    var last = new Date(y, m+1, 0).getDate();
-    return y + "-" + pad(m+1) + "-" + pad(Math.min(d.getDate(), last));
+    /* anchorDay = ödemenin orijinal vade günü (örn. 31). Kısa ayda kırpılan gün
+       uzun aya dönünce geri kazanılır; böylece ay sonu ödemesi 28'e sabitlenmez. */
+    var day = Math.min(Number(anchorDay) || d.getDate(), new Date(y, m+1, 0).getDate());
+    return y + "-" + pad(m+1) + "-" + pad(day);
   }
 
   function handleAction(act, id){
     var p = byId(id);
     if (!p) return;
     if (act === "pay"){
-      p.status = "done"; save(); render(); toast("Ödendi olarak işaretlendi"); Sound.play("pay");
+      p.status = "done";
       if (p.repeat === "monthly"){
-        var due = nextMonthDue(p.due);
-        var dup = payments.some(function(x){ return x.cat===p.cat && x.due===due && x.amount===p.amount; });
+        var anchor = p.dueDay || parseISO(p.due).getDate();
+        var due = nextMonthDue(p.due, anchor);
+        var dup = payments.some(function(x){
+          return x.cat===p.cat && x.due===due && x.amount===p.amount && x.note===(p.note || "") && x.sub===(p.sub || "");
+        });
         if (!dup){
-          payments.push({ id:Date.now(), cat:p.cat, amount:p.amount, due:due, status:"wait", note:p.note || "", repeat:"monthly" });
-          save();
+          /* autoFrom: bu kopyanın hangi ödemeden otomatik türediği; "geri al" bunu kaldırır. */
+          payments.push({ id:Date.now(), cat:p.cat, amount:p.amount, due:due, status:"wait", note:p.note || "", sub:p.sub || "", repeat:"monthly", dueDay:anchor, autoFrom:p.id });
         }
       }
+      save(); render(); toast("Ödendi olarak işaretlendi"); Sound.play("pay");
     } else if (act === "undo"){
       p.status = "wait";
       if (parseISO(p.due) < todayMid()) p.status = "late";
+      if (p.repeat === "monthly"){
+        /* "Ödendi" işaretlenince otomatik oluşturulan sonraki ay kopyası, kullanıcı
+           elle değiştirmediyse (vade aynı ve hâlâ bekliyorsa) geri almayla kaldırılır. */
+        var nextDue = nextMonthDue(p.due, p.dueDay);
+        payments = payments.filter(function(x){
+          return !(x.autoFrom === p.id && x.status === "wait" && x.due === nextDue);
+        });
+      }
       save(); render(); toast("Geri alındı"); Sound.play("undo");
     } else if (act === "postpone"){
       var d = parseISO(p.due); d.setDate(d.getDate()+7);
       p.due = d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
       if (p.status === "late" && d >= todayMid()) p.status = "wait";
-      save(); render(); toast("Vade 7 gün ertelendi");
+      save(); render(); toast("Vade 7 gün ertelendi"); Sound.play("tick");
     } else if (act === "edit"){
       openSheet("edit", id);
     } else if (act === "del"){
@@ -2062,8 +2182,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   /* ---------- Events ---------- */
   view.addEventListener("keydown", function(e){
     if(e.key!=="Enter" && e.key!==" ") return;
-    var gaugePart=e.target.closest(".gauge-segment[data-k]");
-    if(gaugePart){ e.preventDefault(); selectDonut(gaugePart.getAttribute("data-k")); }
+    var act=e.target.closest(".gauge-segment[data-k], .cat-row[data-k]");
+    if(act){ e.preventDefault(); Sound.play("tick"); selectDonut(act.getAttribute("data-k")); }
   });
   view.addEventListener("click", function(e){
     var catRow = e.target.closest(".cat-row[data-k]");
@@ -2099,23 +2219,11 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     }
     if (btn.id === "backupNowBtn"){ doBackup(); return; }
     if (btn.id === "restoreBtn"){ openSheet("restore"); return; }
-    if (btn.id === "restoreFileBtn"){ var rf = document.getElementById("restoreFile"); if (rf) rf.click(); return; }
     if (btn.id === "soundTestBtn"){ Sound.play("pay"); return; }
     if (btn.id === "setPinBtn"){ showLock("setup"); return; }
     if (btn.id === "changePinBtn"){ clearPin(); showLock("setup"); return; }
     if (btn.id === "removePinBtn"){ clearPin(); toast("PIN kaldırıldı"); render(); return; }
     if (btn.id === "settingsInstall"){ doInstall(); return; }
-    if (btn.hasAttribute("data-restore")){
-      var ts = +btn.getAttribute("data-restore");
-      listBackups(function(list){
-        var snap = list.filter(function(s){ return s.ts === ts; })[0];
-        if (snap && snap.payments){
-          payments = snap.payments; applyOverdue(); save(); render(); closeSheet();
-          toast("Yedek geri yüklendi");
-        }
-      });
-      return;
-    }
     if (btn.hasAttribute("data-act")){
       handleAction(btn.getAttribute("data-act"), +btn.getAttribute("data-id"));
     }
@@ -2132,12 +2240,6 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (e.target.id === "importFile"){
       var f = e.target.files && e.target.files[0];
       if (f) importJSON(f);
-      e.target.value = "";
-      return;
-    }
-    if (e.target.id === "restoreFile"){
-      var f2 = e.target.files && e.target.files[0];
-      if (f2) importJSON(f2);
       e.target.value = "";
       return;
     }
@@ -2167,6 +2269,14 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       toast("Yedek sıklığı kaydedildi");
       return;
     }
+    if (e.target.name === "fx" && e.target.checked){
+      settings.fx = e.target.value !== "off";
+      saveSettings();
+      applyFxVisibility();
+      if (settings.fx) fetchUSDTRY();
+      toast(settings.fx ? "Kur göstergesi açık" : "Kur göstergesi kapalı");
+      return;
+    }
   });
 
   document.getElementById("navbar").addEventListener("click", function(e){
@@ -2174,7 +2284,11 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var nt = b.getAttribute("data-tab");
     if (nt === tab) return;
     var dir = TAB_ORDER.indexOf(nt) > TAB_ORDER.indexOf(tab) ? 1 : -1;
-    go(function(){ tab = nt; render(); window.scrollTo(0, 0); }, dir);
+    /* Kaydırma, anlık görüntü alınmadan ÖNCE sıfırlanmalı. startViewTransition
+       eski sayfayı kaydırılmış konumda yakalar; sıfırlama callback içinde
+       kalırsa eski anlık görüntü kaydırma konumundan yukarıdan aşağı kayar. */
+    window.scrollTo(0, 0);
+    go(function(){ tab = nt; render(); }, dir);
   });
 
   document.getElementById("fab").addEventListener("click", function(){ openSheet("add"); });
@@ -2236,6 +2350,18 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     inp.value = ""; document.getElementById("subNew").hidden = true;
   }
   sheetBody.addEventListener("keydown", function(e){
+    /* Odak tuzağı: Tab, panel içinde dönsün (aria-modal ile tutarlı). */
+    if (e.key === "Tab"){
+      var focusables = Array.prototype.filter.call(sheet.querySelectorAll("button, input, select, textarea"), function(el){
+        return !el.disabled && el.offsetParent !== null;
+      });
+      if (focusables.length){
+        var first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+      }
+      return;
+    }
     if (e.key === "Enter" && e.target && e.target.id === "subNewName"){ e.preventDefault(); addBillType(); }
   });
   sheetBody.addEventListener("change", function(e){
@@ -2262,14 +2388,14 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var err = document.getElementById("formErr");
     var fd = new FormData(form);
     var cat = String(fd.get("cat") || "");
-    var amount = parseInt(fd.get("amount"), 10);
+    var amount = parseAmount(fd.get("amount"));
     var due = String(fd.get("due") || "");
     var note = String(fd.get("note") || "").trim();
     var repeat = String(fd.get("repeat") || "once");
     var sub = cat === "fatura" ? String(fd.get("sub") || "") : "";
     if (cat === "fatura" && !sub) sub = guessBillSub(note);
 
-    if (!CATS[cat] || !amount || amount <= 0 || !due){
+    if (!CATS[cat] || !Number.isFinite(amount) || !due || !isValidISODate(due)){
       err.textContent = "Kategori, geçerli bir tutar ve vade girmelisin.";
       err.hidden = false;
       return;
@@ -2284,11 +2410,12 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         p.note = note;
         p.sub = sub;
         p.repeat = repeat;
+        p.dueDay = repeat === "monthly" ? parseISO(due).getDate() : undefined;
         if (p.status !== "done") p.status = status;
       }
       toast("Ödeme güncellendi");
     } else {
-      payments.push({ id:Date.now(), cat:cat, amount:amount, due:due, status:status, note:note, sub:sub, repeat:repeat });
+      payments.push({ id:Date.now(), cat:cat, amount:amount, due:due, status:status, note:note, sub:sub, repeat:repeat, dueDay: repeat === "monthly" ? parseISO(due).getDate() : undefined });
       toast("Ödeme eklendi"); Sound.play("add");
     }
     save();
@@ -2299,34 +2426,81 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   /* ---------- Data I/O ---------- */
+  function backupFileName(ts){
+    var d = new Date(Number(ts) || Date.now());
+    return "odeme-takip-yedek-" + d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes()) + ".json";
+  }
   function exportJSON(){
     try {
-      var blob = new Blob([JSON.stringify({ version:1, exportedAt:new Date().toISOString(), payments:payments }, null, 2)], { type:"application/json" });
+      var blob = new Blob([JSON.stringify({ version:1, exportedAt:new Date().toISOString(), billTypes:settings.billTypes || [], payments:payments }, null, 2)], { type:"application/json" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      a.href = url; a.download = "odeme-takip-yedek.json";
+      a.href = url; a.download = backupFileName(Date.now());
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
       toast("Yedek indirildi");
     } catch(e){ toast("Dışa aktarma başarısız"); }
   }
 
+  function validateImportedPayments(data){
+    if (!data || (Array.isArray(data) ? false : data.version !== 1)) throw new Error("unsupported-version");
+    var list = Array.isArray(data) ? data : data.payments;
+    if (!Array.isArray(list)) throw new Error("bad-list");
+    var seen = {};
+    return list.map(function(p, i){
+      var amount = p && parseAmount(p.amount);
+      if (!p || !CATS[p.cat] || !Number.isFinite(amount) || !isValidISODate(p.due)
+          || ["done","wait","late"].indexOf(p.status) === -1
+          || ["once","monthly"].indexOf(p.repeat) === -1
+          || (p.sub != null && typeof p.sub !== "string") || (p.note != null && typeof p.note !== "string")) {
+        throw new Error("invalid-payment-" + i);
+      }
+      /* Tekrarlanan ID'ler byId()'in yanlış kaydı bulmasına yol açar; yeniden numaralandır. */
+      var id = Number(p.id);
+      if (!Number.isFinite(id) || seen[id]) id = Date.now() + i;
+      while (seen[id]) id += 1;
+      seen[id] = 1;
+      var out = { id:id, cat:p.cat, amount:amount, due:p.due, status:p.status,
+                  note:p.note || "", sub:p.sub || "", repeat:p.repeat };
+      if (p.repeat === "monthly" && Number.isInteger(p.dueDay) && p.dueDay >= 1 && p.dueDay <= 31) out.dueDay = p.dueDay;
+      return out;
+    });
+  }
   function importJSON(file){
     var r = new FileReader();
     r.onload = function(){
+      var data = null, imported = null;
       try {
-        var data = JSON.parse(String(r.result));
-        var list = data && Array.isArray(data.payments) ? data.payments : (Array.isArray(data) ? data : null);
-        if (!list) throw new Error("bad");
-        payments = list.filter(function(p){ return p && CATS[p.cat] && p.due && p.amount; }).map(function(p,i){
-          return { id:p.id || Date.now()+i, cat:p.cat, amount:+p.amount, due:p.due,
-                   status:(p.status==="done"||p.status==="wait"||p.status==="late")?p.status:"wait",
-                   note:p.note || "", sub:p.sub || "", repeat:p.repeat==="monthly"?"monthly":"once" };
-        });
-        if (!payments.length) throw new Error("empty");
-        applyOverdue(); save(); render(); closeSheet();
+        data = JSON.parse(String(r.result));
+        imported = validateImportedPayments(data);
+      } catch(e){ toast("Geçersiz yedek dosyası"); Sound.play("error"); return; }
+      if (!imported.length && !confirm("Bu yedek boş. Mevcut tüm ödemelerin yerini boş listeyle değiştirmek istiyor musunuz?")) return;
+      /* Yedekle gelen özel fatura türlerini ekle (aynı koda sahip olanlar atlanır). */
+      if (data && Array.isArray(data.billTypes)){
+        try {
+          var added = false;
+          data.billTypes.forEach(function(t){
+            if (!t || typeof t.k !== "string" || !t.k || typeof t.label !== "string" || !t.label) return;
+            var exists = (settings.billTypes || []).some(function(x){ return x.k === t.k; });
+            if (!exists){
+              settings.billTypes = (settings.billTypes || []).concat([{ k:t.k, label:t.label, ico:t.ico || "🧾", bg:t.bg || "rgba(34,211,238,.16)" }]);
+              added = true;
+            }
+          });
+          if (added) saveSettings();
+        } catch(e){}
+      }
+      var commit = function(){
+        var previous = payments;
+        payments = imported;
+        applyOverdue();
+        if (!save()){ payments = previous; return; }
+        render(); closeSheet();
         toast("Veriler içe aktarıldı"); Sound.play("backup");
-      } catch(e){ toast("Geçersiz yedek dosyası"); Sound.play("error"); }
+      };
+      saveBackupSnapshot(Date.now()).then(commit).catch(function(){
+        if (confirm("Mevcut verilerin cihaz içi yedeği oluşturulamadı. Yine de içe aktarmak istiyor musunuz?")) commit();
+      });
     };
     r.onerror = function(){ toast("Dosya okunamadı"); };
     r.readAsText(file);
@@ -2339,11 +2513,10 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (button){ button.disabled = true; button.textContent = "Yedekleniyor…"; }
     try {
       var date = new Date(ts);
-      var name = "finans-yedek-" + date.getFullYear() + "-" + pad(date.getMonth()+1) + "-" + pad(date.getDate()) + "-" + pad(date.getHours()) + pad(date.getMinutes()) + ".json";
-      var blob = new Blob([JSON.stringify({ version:1, exportedAt:date.toISOString(), payments:payments }, null, 2)], { type:"application/json" });
+      var blob = new Blob([JSON.stringify({ version:1, exportedAt:date.toISOString(), billTypes:settings.billTypes || [], payments:payments }, null, 2)], { type:"application/json" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      a.href = url; a.download = name;
+      a.href = url; a.download = backupFileName(ts);
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
     } catch(e){
@@ -2351,13 +2524,19 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       toast("Yedek dosyası oluşturulamadı"); Sound.play("error");
       return;
     }
-    saveBackupSnapshot(ts).catch(function(){ return null; }).then(function(){
+    saveBackupSnapshot(ts).then(function(){
       settings.lastBackup = ts;
       saveSettings();
       refreshLastBackup();
       if (button){ button.disabled = false; button.textContent = "Yedekle"; }
       Sound.play("backup");
       toast("Yedek oluşturuldu · " + new Date(ts).toLocaleTimeString("tr-TR", {hour:"2-digit",minute:"2-digit"}));
+    }).catch(function(){
+      /* Dosya indirildi ama cihaz içi kopya oluşmadı: lastBackup ilerletilmez,
+         otomatik yedekleme bir sonraki açılışta tekrar dener. */
+      if (button){ button.disabled = false; button.textContent = "Yedekle"; }
+      toast("Yedek dosyası indirildi; cihaz içi kopya oluşturulamadı");
+      Sound.play("error");
     });
   }
 
@@ -2399,9 +2578,11 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (!("Notification" in window) || Notification.permission !== "granted") return;
     var t = todayMid();
     var days = settings.notifyDays || 3;
+    var OVERDUE_WINDOW = 60; /* gün: çok eski gecikmiş kayıtlar uygulamada görünür ama bildirim üretmez */
     var soon = payments.filter(function(p){
       if (p.status === "done") return false;
-      var diff = (parseISO(p.due) - t) / 86400000;
+      var diff = Math.round((parseISO(p.due) - t) / 86400000);
+      if (diff < 0) return diff >= -OVERDUE_WINDOW;
       return diff <= days;
     });
     if (!soon.length) return;
@@ -2410,6 +2591,9 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     try { last = localStorage.getItem(dayKey); } catch(e){}
     var stamp = new Date().toDateString();
     if (!force && last === stamp) return;
+    /* Uygulama ekrandayken sistem bildirimi rahatsız etmesin; zil ve "Yaklaşan
+       Ödemeler" bölümü bilgiyi zaten gösterir. Arkaya alınınca tekrar denenir. */
+    if (!force && document.visibilityState === "visible") return;
     try { localStorage.setItem(dayKey, stamp); } catch(e){}
     var overdue = soon.filter(function(p){ return parseISO(p.due) < t; }).length;
     var upcoming = soon.length - overdue;
@@ -2523,6 +2707,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   function applyTheme(theme){
     var light = theme === "light";
     document.body.classList.toggle("light-theme", light);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", light ? "#f4f7fb" : "#070b16");
     var icon = document.getElementById("themeIcon");
     var btn = document.getElementById("themeToggle");
     if (icon) icon.textContent = light ? "🌙" : "☀️";
@@ -2547,7 +2733,6 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   function startApp(){
-    setupTheme();
     if (appStarted) return;
     appStarted = true;
 
@@ -2563,7 +2748,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       if (wantAdd) openSheet("add");
       scheduleReminderCheck();
       checkAutoBackup();
-      fetchUSDTRY();
+      if (settings.fx !== false) fetchUSDTRY();
     });
   }
 
@@ -2572,10 +2757,18 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 
   loadSettings();
   applyMotionSetting();
+  setupTheme();
+  loadCachedFx();
+  if (lastFx !== null){
+    var fxValEl = document.getElementById("fxValue");
+    if (fxValEl) fxValEl.textContent = fmtFx(lastFx);
+  }
+  applyFxVisibility();
+  /* PIN isteğe bağlıdır: yalnızca önceden belirlenmişse kilit ekranı gelir. */
   if (pinSet()){
     showLock("login");
   } else {
-    showLock("setup");
+    startApp();
   }
 })();
 </script>

@@ -25,9 +25,9 @@ async function getActiveCacheName() {
     const name = await saved.text();
     if (name.indexOf(CACHE_PREFIX) === 0) { activeCacheName = name; return name; }
   }
-  const names = (await caches.keys()).filter((name) => name.indexOf(CACHE_PREFIX) === 0);
+  const names = (await caches.keys()).filter((name) => name.indexOf(CACHE_PREFIX) === 0).sort();
   if (!names.length) throw new Error("Uygulama önbelleği bulunamadı");
-  await rememberActiveCache(names[0]);
+  await rememberActiveCache(names[names.length - 1]);
   return names[0];
 }
 async function getActiveCache() { return caches.open(await getActiveCacheName()); }

@@ -635,6 +635,9 @@ body.light-theme .count.soon,body.light-theme .soon-main .tag{color:#0e7490}
 .gauge-svg.drawn .gauge-segment{stroke-dashoffset:0}
 .gauge-svg.drawn.has-sel .gauge-segment:not(.is-active){opacity:.5}
 .gauge-svg .gauge-segment.is-active{opacity:1;stroke-width:18;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--cat-color) 55%,transparent))}
+/* SVG dilimde tarayıcı odak halkası büyük bir kare gibi görünüyordu; tıklama/klavye
+   seçimi yine çalışır, görsel geri bildirimi .is-active sağlar. */
+.gauge-segment:focus,.gauge-segment:focus-visible,.gauge-svg:focus,.gauge-svg:focus-visible{outline:none}
 .gauge-needle{transition:transform 1s cubic-bezier(.4,0,.2,1);filter:drop-shadow(0 2px 5px rgba(0,0,0,.45))}
 .gauge-needle .needle-knob{filter:drop-shadow(0 0 2px rgba(165,180,252,.5))}
 .gauge-center.pop strong{animation:gPop .45s cubic-bezier(.2,.9,.3,1.3)}
@@ -655,6 +658,9 @@ body.light-theme .gauge-needle path,body.light-theme .gauge-needle .needle-knob{
 ::view-transition-group(page){animation:none}
 ::view-transition-old(page){animation:vtOut .22s ease both}
 ::view-transition-new(page){animation:vtIn .34s cubic-bezier(.2,.8,.2,1) both}
+/* Alt bar/menü ve diğer sabit ögeler varsayılan kök geçişiyle görünüp kayboluyordu;
+   kök geçişi kapatılır, yalnızca .view (page) animasyonlanır. */
+::view-transition-old(root),::view-transition-new(root){animation:none}
 @keyframes vtOut{to{opacity:0;transform:translateX(calc(var(--vt-x,26px) * -1))}}
 @keyframes vtIn{from{opacity:0;transform:translateX(var(--vt-x,26px))}}
 .view.enter{animation:vtIn .34s cubic-bezier(.2,.8,.2,1) both}
@@ -821,7 +827,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.9.2";
+  var VERSION = "2.9.3";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -1378,7 +1384,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   /* ---------- Yaklaşan Ödemeler: vadesine 1 gün kalanlar ---------- */
-  function soonHTML(){
+  function soonHTML(noRise){
     var t = todayMid();
     var days = settings.notifyDays || 3;
     var items = payments.filter(function(p){
@@ -1393,7 +1399,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (!items.length){
       return h + '<div class="soon-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Önümüzdeki ' + days + ' günde vadesi dolan ödeme yok</div>';
     }
-    h += '<div class="soon-list">';
+    h += '<div class="soon-list' + (noRise ? ' no-rise' : '') + '">';
     items.forEach(function(p, i){
       var c = CATS[p.cat] || CATS.fatura;
       var d = parseISO(p.due);
@@ -1470,16 +1476,21 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     arc.style.strokeDashoffset = to;
   }
   /* Sekme / ay geçişi: View Transitions varsa onu, yoksa CSS giriş animasyonunu kullanır */
+  var pendingRiseSuppress = false;
   function go(fn, dir){
     var root = document.documentElement;
     root.style.setProperty("--vt-x", (dir < 0 ? -26 : 26) + "px");
-    /* Sayfa kayarken kartların kendi "yukarıdan yüksel" animasyonu üst üste binip köşeden gelme hissi veriyordu;
-       geçiş sırasında kapatılır, süre dolunca (animasyonlar bittikten sonra) geri açılır. */
-    root.classList.add("no-rise");
-    clearTimeout(go._t);
-    go._t = setTimeout(function(){ root.classList.remove("no-rise"); }, 2400);
+    /* Kartların "yukarıdan yüksel" animasyonu geçişle üst üste binmesin diye bu render'da
+       kapatılır. Sınıf üretilen listeye konur; sonradan kaldırılan global bir sınıf
+       kullanılmaz (yoksa geçiş bittikten sonra animasyon baştan oynuyordu). */
+    pendingRiseSuppress = true;
     if (document.startViewTransition && !prefersReduced()){
-      try { document.startViewTransition(function(){ fn(); }); return; } catch(e){}
+      try {
+        var vt = document.startViewTransition(function(){ fn(); });
+        /* Hızlı ardışık geçişlerde önceki geçiş iptal edilir; sözü sessizce yut. */
+        if (vt){ if (vt.ready && vt.ready.catch) vt.ready.catch(function(){}); if (vt.finished && vt.finished.catch) vt.finished.catch(function(){}); }
+        return;
+      } catch(e){}
     }
     fn();
     if (!prefersReduced()){
@@ -1603,7 +1614,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   /* ---------- Views ---------- */
-  function viewPayments(){
+  function viewPayments(noRise){
     var inMonth = payments.filter(sameMonth);
     var total = sum(inMonth);
     var paid = sum(inMonth, function(p){ return p.status==="done" ? p.amount : 0; });
@@ -1652,7 +1663,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         + '<button class="go" id="alertGo" type="button">Gör</button></div>';
     }
 
-    html += soonHTML();
+    html += soonHTML(noRise);
     html += '<div class="sec-head"><h2>Bu Ayın Ödemeleri</h2><span class="count">' + shown.length + ' ödeme</span></div>';
     html += '<div class="filters" id="filters">'
       + '<button class="chip' + (filter==="all"?" active":"") + '" data-filter="all" type="button">Tümü</button>'
@@ -1661,7 +1672,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       + '<button class="chip' + (filter==="late"?" active":"") + '" data-filter="late" type="button">Gecikmiş</button>'
       + '</div>';
 
-    html += '<div class="list" id="list">';
+    html += '<div class="list' + (noRise ? ' no-rise' : '') + '" id="list">';
     if (!shown.length){
       html += '<div class="empty"><div class="e-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg></div><b>Bu filtrede ödeme yok</b><span>Harika, her şey kontrol altında.</span></div>';
     } else {
@@ -1991,7 +2002,8 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
 
   function render(){
-    if (tab==="pay") view.innerHTML = viewPayments();
+    var noRise = pendingRiseSuppress; pendingRiseSuppress = false;
+    if (tab==="pay") view.innerHTML = viewPayments(noRise);
     else if (tab==="sum") view.innerHTML = viewSummary();
     else if (tab==="year") view.innerHTML = viewYear();
     else if (tab==="all") view.innerHTML = viewAllTime();

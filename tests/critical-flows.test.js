@@ -59,6 +59,16 @@ async function testAmountsAndImports() {
   assert.strictEqual(l0.status, "wait");
   assert.strictEqual(l0.amount, 100.5);
   assert.strictEqual(ctx.validate([{ cat: "fatura", amount: 5, due: "bozuk" }]).skipped, 1);
+
+  // Ödenme tarihi: geçerli ISO ve yalnızca ödenmiş kayıtta taşınır.
+  const paid = ctx.validate({ version: 1, payments: [{ id: 1, cat: "fatura", amount: 10, due: "2026-02-28", status: "done", repeat: "once", paidAt: "2026-02-27" }] }).list[0];
+  assert.strictEqual(paid.paidAt, "2026-02-27");
+  const badPaid = ctx.validate({ version: 1, payments: [{ id: 1, cat: "fatura", amount: 10, due: "2026-02-28", status: "done", repeat: "once", paidAt: "2026-02-30" }] }).list[0];
+  assert.ok(!("paidAt" in badPaid));
+  const waitPaid = ctx.validate({ version: 1, payments: [{ id: 1, cat: "fatura", amount: 10, due: "2026-02-28", status: "wait", repeat: "once", paidAt: "2026-02-27" }] }).list[0];
+  assert.ok(!("paidAt" in waitPaid));
+  const legacyPaid = ctx.validate({ version: 1, payments: [{ id: 1, cat: "fatura", amount: 10, due: "2026-02-28", status: "done", repeat: "once" }] }).list[0];
+  assert.ok(!("paidAt" in legacyPaid));
 }
 
 async function testStorageAndMigration() {
@@ -105,7 +115,7 @@ async function testImportTransaction() {
 async function testMonthlyRepeats() {
   let renders = 0;
   const ctx = context({
-    Sound: { play: () => {} }, toast: () => {}, save: () => true, render: () => { renders += 1; }, todayMid: () => new Date(2026, 0, 1), CATS: { fatura: { label: "Fatura" } }, confirm: () => true, tl: () => "", dayLabel: () => ""
+    Sound: { play: () => {} }, toast: () => {}, save: () => true, render: () => { renders += 1; }, todayMid: () => new Date(2026, 0, 1), todayISO: () => "2026-01-01", CATS: { fatura: { label: "Fatura" } }, confirm: () => true, tl: () => "", dayLabel: () => ""
   });
   run(ctx, "var payments=[{id:1,cat:'fatura',amount:250.5,due:'2026-01-31',status:'wait',note:'Elektrik',sub:'elektrik',repeat:'monthly'}]; function byId(id){return payments.find(function(p){return p.id===id;});}" + between("function pad", "function parseISO") + between("function parseISO", "function dayLabel") + between("function nextMonthDue", "/* ---------- Events ---------- */") + "this.handleAction=handleAction; this.getPayments=()=>payments; this.nextMonthDue=nextMonthDue;");
   assert.strictEqual(ctx.nextMonthDue("2026-01-31"), "2026-02-28");
@@ -115,11 +125,13 @@ async function testMonthlyRepeats() {
   ctx.handleAction("pay", 1);
   const payments = ctx.getPayments();
   assert.strictEqual(payments.length, 2);
+  assert.strictEqual(payments[0].paidAt, "2026-01-01");
   assert.deepStrictEqual(JSON.parse(JSON.stringify(payments[1])), { id: payments[1].id, cat: "fatura", amount: 250.5, due: "2026-02-28", status: "wait", note: "Elektrik", sub: "elektrik", repeat: "monthly", dueDay: 31, autoFrom: 1 });
   assert.strictEqual(renders, 2);
-  // Geri al: otomatik oluşturulan sonraki ay kopyası da kalkmalı (tek kayıt kalır).
+  // Geri al: otomatik oluşturulan sonraki ay kopyası da kalkmalı (tek kayıt kalır), ödenme tarihi silinmeli.
   ctx.handleAction("undo", 1);
   assert.strictEqual(ctx.getPayments().length, 1);
+  assert.ok(!("paidAt" in ctx.getPayments()[0]));
 }
 
 (async () => {

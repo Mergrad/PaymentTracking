@@ -33,7 +33,7 @@ const amountAndDate = between("function parseAmount", "function compactTL");
 const validator = between("function validateImportedPayments", "function importJSON");
 
 async function testAmountsAndImports() {
-  const ctx = context({ CATS: { fatura: {} } });
+  const ctx = context({ CATS: { fatura: {} }, settings: {} });
   run(ctx, amountAndDate + validator + "this.parseAmount = parseAmount; this.validate = validateImportedPayments;");
 
   [["1250", 1250], ["1250,50", 1250.5], ["1.250,50", 1250.5], ["1250.50", 1250.5]].forEach(([input, expected]) => {
@@ -97,7 +97,7 @@ async function testImportTransaction() {
   const local = {};
   function FileReader() { this.readAsText = () => { this.result = fileText; this.onload(); }; }
   const ctx = context({
-    CATS: { fatura: {} }, localStorage: { getItem: () => null, setItem: (key, value) => { local[key] = value; } }, FileReader,
+    CATS: { fatura: {} }, settings: {}, CAT_ICONS: { tag: "" }, localStorage: { getItem: () => null, setItem: (key, value) => { local[key] = value; } }, FileReader,
     confirm: () => true, saveBackupSnapshot: () => Promise.resolve(), applyOverdue: () => {}, render: () => {}, closeSheet: () => {}, toast: () => {}, Sound: { play: () => {} }
   });
   run(ctx, "var KEY='odeme-takip-v1'; var payments=" + JSON.stringify(old) + ";" + amountAndDate + between("function save", "function load") + validator + between("function importJSON", "/* ---------- Backup ---------- */") + "this.importJSON=importJSON; this.getPayments=()=>payments;");
@@ -134,10 +134,97 @@ async function testMonthlyRepeats() {
   assert.ok(!("paidAt" in ctx.getPayments()[0]));
 }
 
+async function testCSVExport() {
+  const CATS = { fatura: { label: "Fatura" }, diger: { label: "Kategorisiz" } };
+  const ctx = context({
+    CATS,
+    getCat: (k) => CATS[k] || CATS.diger,
+    STATUS: { done: { t: "Ödendi" }, wait: { t: "Bekliyor" }, late: { t: "Gecikmiş" } }
+  });
+  run(ctx, amountAndDate + between("function buildCSV", "function exportCSV") + "this.buildCSV=buildCSV;");
+  const list = [
+    { cat: "fatura", amount: 1250.5, due: "2026-03-05", status: "wait", note: 'Elektrik; "ocak"' },
+    { cat: "fatura", amount: 99, due: "2026-01-10", status: "done", note: "Su", paidAt: "2026-01-09" },
+    { cat: "bilinmeyen", amount: 10, due: "2026-02-01", status: "done", note: "" }
+  ];
+  const csv = ctx.buildCSV(list);
+  assert.ok(csv.startsWith("﻿"), "Excel için BOM gerekli");
+  const lines = csv.slice(1).split("\r\n");
+  assert.strictEqual(lines[0], "Vade;Kategori;Tutar;Durum;Ödenme Tarihi;Not");
+  assert.strictEqual(lines.length, 4);
+  // Vadeye göre artan sıralama; tarih DD.MM.YYYY; tutar virgüllü ondalık.
+  assert.strictEqual(lines[1], '"10.01.2026";"Fatura";"99,00";"Ödendi";"09.01.2026";"Su"');
+  // paidAt yoksa vade tarihi gösterilir (eski kayıtlarla aynı kural).
+  assert.strictEqual(lines[2], '"01.02.2026";"Kategorisiz";"10,00";"Ödendi";"01.02.2026";""');
+  // Ödenmemiş kayıtta ödenme tarihi boş; not içindeki ; ve " CSV kurallarına göre kaçar.
+  assert.strictEqual(lines[3], '"05.03.2026";"Fatura";"1250,50";"Bekliyor";"";"Elektrik; ""ocak"""');
+  assert.strictEqual(ctx.buildCSV([]), "﻿Vade;Kategori;Tutar;Durum;Ödenme Tarihi;Not");
+}
+
+async function testCustomCategories() {
+  const CATS = { kira: { label: "Kira", color: "#7c5cff", icon: "" }, fatura: { label: "Fatura", color: "#22d3ee", icon: "" }, diger: { label: "Kategorisiz", color: "#94a3b8", icon: "" } };
+  const CAT_ICONS = { tag: "<path/>", paw: "<ellipse/>" };
+  const settings = { categories: [{ k: "cx1", label: "Evcil Hayvan", color: "#f472b6", icon: "paw" }] };
+  const ctx = context({ CATS, CAT_ICONS, CAT_ORDER: ["kira", "fatura", "diger"], settings });
+  run(ctx, between("function customCats", "var payments = []") + amountAndDate + validator + "this.getCat=getCat; this.catOrder=catOrder; this.hasCat=hasCat; this.validate=validateImportedPayments;");
+
+  assert.strictEqual(ctx.getCat("cx1").label, "Evcil Hayvan");
+  assert.strictEqual(ctx.getCat("cx1").icon, CAT_ICONS.paw);
+  assert.strictEqual(ctx.getCat("kira").label, "Kira");
+  assert.strictEqual(ctx.getCat("yok").label, "Kategorisiz"); // bilinmeyen → Kategorisiz
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(ctx.catOrder())), ["kira", "fatura", "diger", "cx1"]);
+  assert.strictEqual(ctx.hasCat("cx1"), true);
+  assert.strictEqual(ctx.hasCat("yok"), false);
+
+  // Doğrulayıcı: cihazdaki özel kategori ve yedekle gelen tanım geçerli; bilinmeyen "diger"e düşer.
+  const fromSettings = ctx.validate({ version: 1, payments: [{ id: 1, cat: "cx1", amount: 10, due: "2026-03-01", status: "wait", repeat: "once" }] }).list[0];
+  assert.strictEqual(fromSettings.cat, "cx1");
+  const fromFile = ctx.validate({ version: 1, categories: [{ k: "cx9", label: "Eğitim" }], payments: [{ id: 2, cat: "cx9", amount: 10, due: "2026-03-01", status: "wait", repeat: "once" }] }).list[0];
+  assert.strictEqual(fromFile.cat, "cx9");
+  const unknown = ctx.validate({ version: 1, payments: [{ id: 3, cat: "cx9", amount: 10, due: "2026-03-01", status: "wait", repeat: "once" }] }).list[0];
+  assert.strictEqual(unknown.cat, "diger");
+
+  // İçe aktarma: kategoriler birleşir; varsayılan çakışması atlanır; renk/ikon sanitasyonu.
+  let fileText = "";
+  const local = {};
+  function FileReader() { this.readAsText = () => { this.result = fileText; this.onload(); }; }
+  const importSettings = { categories: [] };
+  const ictx = context({
+    CATS, CAT_ICONS, settings: importSettings, localStorage: { getItem: () => null, setItem: (key, value) => { local[key] = value; } }, FileReader,
+    confirm: () => true, saveBackupSnapshot: () => Promise.resolve(), applyOverdue: () => {}, render: () => {}, closeSheet: () => {}, toast: () => {}, Sound: { play: () => {} }
+  });
+  run(ictx, "var KEY='odeme-takip-v1'; var SETTINGS_KEY='odeme-takip-settings'; var payments=[];" + amountAndDate + between("function save", "function load") + validator + between("function importJSON", "/* ---------- Backup ---------- */") + "this.importJSON=importJSON; this.getPayments=()=>payments;");
+  ictx.Sound = { play: () => {} };
+  fileText = JSON.stringify({
+    version: 1,
+    categories: [
+      { k: "cx1", label: "Evcil Hayvan", color: "#f472b6", icon: "paw" },
+      { k: "kira", label: "Sahte Kira", color: "#000000", icon: "tag" },
+      { k: "cx2", label: "Bozuk", color: "red;}", icon: "yok" }
+    ],
+    payments: [{ id: 10, cat: "cx1", amount: 12.5, due: "2026-03-02", status: "wait", note: "Mama", repeat: "once" }]
+  });
+  ictx.importJSON({});
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(ictx.getPayments()[0].cat, "cx1");
+  assert.strictEqual(importSettings.categories.length, 2); // kira çakışması atlandı
+  assert.strictEqual(importSettings.categories[0].label, "Evcil Hayvan");
+  assert.strictEqual(importSettings.categories[1].color, "#94a3b8"); // geçersiz renk varsayılana düştü
+  assert.strictEqual(importSettings.categories[1].icon, "tag"); // bilinmeyen ikon varsayılana düştü
+  assert.ok(local["odeme-takip-settings"]);
+
+  // Aynı yedek tekrar içe aktarılınca kategori çoğalmaz.
+  ictx.importJSON({});
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(importSettings.categories.length, 2);
+}
+
 (async () => {
   await testAmountsAndImports();
   await testStorageAndMigration();
   await testImportTransaction();
   await testMonthlyRepeats();
+  await testCSVExport();
+  await testCustomCategories();
   console.log("critical flows: OK");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

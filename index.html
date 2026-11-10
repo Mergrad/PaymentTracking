@@ -361,6 +361,31 @@ body.light-theme .cat-row{background:linear-gradient(145deg,rgba(255,255,255,.96
 .yval{font-size:9.5px;color:var(--faint);font-weight:700;min-height:12px;white-space:nowrap;letter-spacing:-.25px}
 .ycol.active .yval{color:var(--text)}
 
+/* Takvim görünümü */
+.cal-toggle{display:flex;gap:8px;margin:0 20px 4px}
+.cal-toggle .chip{flex:1 1 0;text-align:center}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:5px}
+.cal-week span{font-size:9.5px;font-weight:700;color:var(--faint);text-align:center;letter-spacing:.3px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-empty{aspect-ratio:1}
+.cal-day{position:relative;aspect-ratio:1;display:grid;place-items:center;font-size:12px;font-weight:600;
+  border-radius:11px;border:1px solid transparent;background:transparent;color:var(--text);padding:0;transition:background .15s,border-color .15s}
+.cal-day:hover{background:var(--surface-2)}
+.cal-day.has{background:var(--surface-2);border-color:var(--stroke)}
+.cal-day.today{border-color:rgba(239,68,68,.6);color:#fca5a5;font-weight:800}
+.cal-day.sel{background:rgba(34,211,238,.16);border-color:rgba(34,211,238,.5)}
+.cal-dots{position:absolute;bottom:4px;left:0;right:0;display:flex;justify-content:center;gap:2px}
+.cal-dots i{width:4px;height:4px;border-radius:50%}
+.cal-list{display:grid;gap:6px;margin-top:10px}
+.cal-item{display:flex;align-items:center;gap:8px;width:100%;background:var(--surface-2);border:1px solid var(--stroke);
+  border-radius:11px;padding:9px 11px;font-size:12px;text-align:left;color:var(--text)}
+.cal-item .k{display:flex;align-items:center;gap:7px;min-width:0;flex:1 1 auto}
+.cal-item .k i{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.cal-item .k span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.cal-item b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cal-none{font-size:11.5px;color:var(--muted);text-align:center;padding:8px}
+body.light-theme .cal-day.today{color:#dc2626}
+
 /* Settings */
 .set-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--stroke)}
 .set-row:first-of-type{border-top:none}
@@ -388,6 +413,26 @@ body.light-theme .cat-row{background:linear-gradient(145deg,rgba(255,255,255,.96
   border:1px solid rgba(52,211,153,.3);padding:4px 9px;border-radius:999px;white-space:nowrap}
 .pill-on{font-size:10.5px;font-weight:700;color:#c7c9ff;background:rgba(99,102,241,.16);
   border:1px solid rgba(99,102,241,.32);padding:4px 9px;border-radius:999px;white-space:nowrap}
+
+/* Kategori yönetimi */
+.cm-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--stroke)}
+.cm-row:first-of-type{border-top:none}
+.cm-ico{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto}
+.cm-ico svg{width:18px;height:18px}
+.cm-nm{flex:1 1 auto;min-width:0;font-size:13px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm-kind{font-size:10px;color:var(--faint);font-weight:600;white-space:nowrap}
+.cm-del{min-height:34px;padding:0 12px;font-size:11px}
+.cm-swatches{display:flex;gap:8px;flex-wrap:wrap}
+.cm-sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;padding:0;transition:transform .15s,border-color .15s}
+.cm-sw.on{border-color:var(--text);transform:scale(1.12)}
+.cm-icons{display:flex;gap:6px;flex-wrap:wrap}
+.cm-ic{width:38px;height:38px;border-radius:11px;border:1px solid var(--stroke);background:var(--surface-2);color:var(--muted);display:grid;place-items:center;padding:0;transition:.15s}
+.cm-ic svg{width:19px;height:19px}
+.cm-ic.on{border-color:var(--violet);color:var(--text);background:rgba(99,102,241,.16)}
+.cm-add{display:flex;gap:8px}
+.cm-add input{flex:1 1 auto;min-width:0;border:1px solid var(--stroke-2);background:var(--surface-2);color:var(--text);
+  border-radius:12px;padding:0 13px;min-height:44px;font-size:13.5px;outline:none}
+.cm-add input:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
 
 /* Sheet */
 .scrim{position:fixed;inset:0;background:rgba(3,5,11,.66);backdrop-filter:blur(3px);opacity:0;visibility:hidden;
@@ -865,7 +910,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.9.6";
+  var VERSION = "2.10.0";
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -880,12 +925,35 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   var STATUS = { done:{ t:"Ödendi", c:"ok" }, wait:{ t:"Bekliyor", c:"wait" }, late:{ t:"Gecikmiş", c:"late" } };
   var CAT_ORDER = ["kira","fatura","kart","abonelik","sigorta","diger"];
 
+  /* Özel kategoriler: kullanıcının eklediği kategoriler settings.categories içinde tutulur. */
+  var CAT_COLORS = ["#7c5cff","#22d3ee","#34d399","#fbbf24","#f472b6","#fb7185","#f97316","#94a3b8"];
+  var CAT_ICONS = {
+    tag:   '<path d="M20.6 13.4 12 22 2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+    paw:   '<ellipse cx="12" cy="15.5" rx="4" ry="3.4"/><circle cx="6.3" cy="10.3" r="1.7"/><circle cx="9.8" cy="7.4" r="1.7"/><circle cx="14.2" cy="7.4" r="1.7"/><circle cx="17.7" cy="10.3" r="1.7"/>',
+    book:  '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+    heart: '<path d="M19 14c1.5-1.5 3-3.3 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3.4 1-4.5 2.5C10.9 4 9.3 3 7.5 3A5.5 5.5 0 0 0 2 8.5c0 2.2 1.5 4 3 5.5l7 7Z"/>',
+    gift:  '<rect x="3" y="8" width="18" height="4"/><path d="M5 12v9h14v-9"/><path d="M12 8v13"/><path d="M12 8c-2 0-4.5-.5-4.5-2.5S10 3 11 4c1 1 1 4 1 4Zm0 0c2 0 4.5-.5 4.5-2.5S14 3 13 4c-1 1-1 4-1 4Z"/>',
+    car:   '<path d="M5 11 6.5 6.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/>',
+    plane: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
+    star:  '<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/>'
+  };
+  var catColor = CAT_COLORS[0], catIcon = "tag";
+  function customCats(){ return Array.isArray(settings.categories) ? settings.categories : []; }
+  function getCat(k){
+    if (CATS[k]) return CATS[k];
+    var c = customCats().filter(function(x){ return x.k === k; })[0];
+    if (c) return { label:c.label, color:c.color, icon:CAT_ICONS[c.icon] || CAT_ICONS.tag };
+    return CATS.diger;
+  }
+  function catOrder(){ return CAT_ORDER.concat(customCats().map(function(c){ return c.k; })); }
+  function hasCat(k){ return !!CATS[k] || customCats().some(function(c){ return c.k === k; }); }
+
 
   var payments = [];
   var _now = new Date();
   var month = _now.getMonth(), year = _now.getFullYear();
-  var filter = "all", tab = "pay", sheetKind = "", editId = null;
-  var settings = { backupInterval:"off", notifyDays:3, lastBackup:0, motion:"system", sound:true, volume:0.6, billTypes:[], fx:true };
+  var filter = "all", tab = "pay", sheetKind = "", editId = null, calSelDay = null;
+  var settings = { backupInterval:"off", notifyDays:3, lastBackup:0, motion:"system", sound:true, volume:0.6, billTypes:[], fx:true, yearMode:"list" };
 
   /* ---------- Helpers ---------- */
   function byId(id){ for (var i=0;i<payments.length;i++){ if (payments[i].id===id) return payments[i]; } return null; }
@@ -1439,7 +1507,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     }
     h += '<div class="soon-list' + (noRise ? ' no-rise' : '') + '">';
     items.forEach(function(p, i){
-      var c = CATS[p.cat] || CATS.fatura;
+      var c = getCat(p.cat);
       var d = parseISO(p.due);
       var diff = Math.round((d - t) / 86400000);
       var tag = diff <= 0 ? "Bugün" : (diff === 1 ? "Yarın" : diff + " gün");
@@ -1550,6 +1618,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       month += delta;
       if (month > 11){ month = 0; year += 1; }
       if (month < 0){ month = 11; year -= 1; }
+      calSelDay = null;
       markMonthChanged();
       render();
     }, delta);
@@ -1722,7 +1791,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       html += '<div class="empty"><div class="e-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg></div><b>Bu filtrede ödeme yok</b><span>Harika, her şey kontrol altında.</span></div>';
     } else {
       shown.forEach(function(p,i){
-        var c = CATS[p.cat] || CATS.fatura, s = STATUS[p.status];
+        var c = getCat(p.cat), s = STATUS[p.status];
         html += '<article class="pay ' + (p.status==="done"?"done":"") + '" data-id="' + p.id + '" style="--accent:' + c.color + ';animation-delay:' + (i*45) + 'ms">'
           + '<div class="p-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + c.icon + '</svg></div>'
           + '<div class="p-body">'
@@ -1754,8 +1823,9 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var waitPct = total ? Math.round(wait/total*100) : 0;
     var latePct = total ? Math.max(0, 100 - paidPct - waitPct) : 0;
 
-    var rows = CAT_ORDER.map(function(k){
-      return { k:k, label:CATS[k].label, color:CATS[k].color, value:sum(inMonth, function(p){ return p.cat===k ? p.amount : 0; }) };
+    var rows = catOrder().map(function(k){
+      var c = getCat(k);
+      return { k:k, label:c.label, color:c.color, value:sum(inMonth, function(p){ return p.cat===k ? p.amount : 0; }) };
     }).filter(function(r){ return r.value > 0; }).sort(function(a,b){ return b.value - a.value; });
     var top = rows[0];
 
@@ -1809,6 +1879,68 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     return html;
   }
 
+  /* ---------- Takvim: pazartesi başlangıçlı ay ızgarası ---------- */
+  function calendarData(list, y, m){
+    var offset = (new Date(y, m, 1).getDay() + 6) % 7;
+    var dim = new Date(y, m + 1, 0).getDate();
+    var byDay = {};
+    list.forEach(function(p){
+      var d = parseISO(p.due);
+      if (d.getFullYear() !== y || d.getMonth() !== m) return;
+      var day = d.getDate();
+      if (!byDay[day]) byDay[day] = [];
+      byDay[day].push(p);
+    });
+    var days = [];
+    for (var i = 1; i <= dim; i++){
+      var items = byDay[i] || [];
+      days.push({ day:i, iso:y + "-" + pad(m + 1) + "-" + pad(i), items:items, total:sum(items) });
+    }
+    return { offset:offset, days:days };
+  }
+
+  function calendarHTML(){
+    var cal = calendarData(payments, year, month);
+    var tISO = todayISO();
+    var h = '<div class="monthbar" id="monthbar">'
+      + '<button class="m-btn" id="prevMonth" type="button" aria-label="Önceki ay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>'
+      + '<div class="m-label"><b>' + MONTHS[month] + " " + year + '</b><span id="todayLabel"></span></div>'
+      + '<button class="m-btn" id="nextMonth" type="button" aria-label="Sonraki ay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>'
+      + '</div>' + swipeHintHTML();
+    h += '<div class="card" style="margin-top:12px"><div class="cal-week">'
+      + ["Pt","Sa","Ça","Pe","Cu","Ct","Pz"].map(function(d){ return '<span>' + d + '</span>'; }).join("")
+      + '</div><div class="cal-grid" role="group" aria-label="Vade takvimi">';
+    for (var i = 0; i < cal.offset; i++) h += '<span class="cal-empty" aria-hidden="true"></span>';
+    cal.days.forEach(function(d){
+      var cls = "cal-day" + (d.items.length ? " has" : "") + (d.iso === tISO ? " today" : "") + (d.iso === calSelDay ? " sel" : "");
+      var dots = "";
+      if (d.items.length){
+        var seen = {}, colors = [];
+        d.items.forEach(function(p){
+          var color = getCat(p.cat).color;
+          if (!seen[color]){ seen[color] = 1; colors.push(color); }
+        });
+        dots = '<span class="cal-dots">' + colors.slice(0,4).map(function(c){ return '<i style="background:' + c + '"></i>'; }).join("") + '</span>';
+      }
+      h += '<button type="button" class="' + cls + '" data-day="' + d.iso + '" aria-label="' + d.day + ' ' + MONTHS[month] + (d.items.length ? ", " + d.items.length + " ödeme" : "") + '">' + d.day + dots + '</button>';
+    });
+    h += '</div>';
+    var sel = null;
+    cal.days.forEach(function(d){ if (d.iso === calSelDay) sel = d; });
+    if (sel){
+      h += '<div class="cal-list" aria-live="polite">';
+      if (!sel.items.length) h += '<div class="cal-none">' + sel.day + ' ' + MONTHS[month] + ' için ödeme yok</div>';
+      sel.items.forEach(function(p){
+        var c = getCat(p.cat), s = STATUS[p.status];
+        h += '<button type="button" class="cal-item" data-id="' + p.id + '"><span class="k"><i style="background:' + c.color + '"></i><span>' + esc(c.label) + (p.note ? ' · ' + esc(p.note) : '') + '</span></span><span class="badge ' + s.c + '">' + s.t + '</span><b>' + tl(p.amount) + '</b></button>';
+      });
+      h += '</div>';
+    } else {
+      h += '<p class="hint">Güne dokunarak o günün ödemelerini gör.</p>';
+    }
+    return h + '</div>';
+  }
+
   function viewYear(){
     var data = MONTHS_SHORT.map(function(m,i){
       var items = payments.filter(function(p){ var d=parseISO(p.due); return d.getFullYear()===year && d.getMonth()===i; });
@@ -1817,15 +1949,21 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var max = Math.max.apply(null, data.map(function(d){ return d.total; }).concat([1]));
     var yTotal = sum(data, function(d){ return d.total; });
     var best = data.slice().sort(function(a,b){ return b.total-a.total; })[0];
-    var yearRows = CAT_ORDER.map(function(k){
-      return { k:k, label:CATS[k].label, color:CATS[k].color, value:sum(payments, function(p){
+    var yearRows = catOrder().map(function(k){
+      var c = getCat(k);
+      return { k:k, label:c.label, color:c.color, value:sum(payments, function(p){
         return parseISO(p.due).getFullYear()===year && p.cat===k ? p.amount : 0;
       }) };
     }).filter(function(r){ return r.value > 0; }).sort(function(a,b){ return b.value-a.value; });
 
     var html = '<div class="page">'
       + '<div class="sec-head" style="margin-top:4px"><h2>Yıllık · ' + year + '</h2><span class="count od-nowrap">' + tl(yTotal) + '</span></div>'
-      + '<div class="card"><h3>Aylık Toplam</h3><div class="chart">';
+      + '<div class="cal-toggle">'
+      + '<button class="chip' + (settings.yearMode !== "cal" ? " active" : "") + '" data-ymode="list" type="button">Liste</button>'
+      + '<button class="chip' + (settings.yearMode === "cal" ? " active" : "") + '" data-ymode="cal" type="button">Takvim</button>'
+      + '</div>';
+    if (settings.yearMode === "cal") return html + calendarHTML() + '</div>';
+    html += '<div class="card"><h3>Aylık Toplam</h3><div class="chart">';
     data.forEach(function(d){
       var h = d.total ? Math.max(6, Math.round(d.total/max*100)) : 3;
       html += '<button class="ycol' + (d.i===month ? " active" : "") + '" data-month="' + d.i + '" type="button" aria-label="' + MONTHS[d.i] + ' ' + year + '">'
@@ -1884,11 +2022,12 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       + '<div class="kv"><span class="k">Toplam kayıt</span><span class="v">' + rows.length + '</span></div>'
       + '</div>';
 
-    var cats = CAT_ORDER.map(function(k){
+    var cats = catOrder().map(function(k){
+      var c = getCat(k);
       return {
         k:k,
-        label:CATS[k].label,
-        color:CATS[k].color,
+        label:c.label,
+        color:c.color,
         value:sum(rows, function(p){ return p.cat===k ? p.amount : 0; }),
         count:rows.filter(function(p){ return p.cat===k; }).length
       };
@@ -1934,6 +2073,30 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 
     html += '<p class="hint">Tüm toplamlar uygulamadaki gerçek ödeme kayıtlarından dinamik olarak hesaplanır.</p></div>';
     return html;
+  }
+
+  function addCategory(){
+    var inp = document.getElementById("catName"); if (!inp) return;
+    var name = inp.value.trim().replace(/\s+/g, " ");
+    if (!name){ inp.focus(); return; }
+    var lower = name.toLocaleLowerCase("tr-TR");
+    var dup = catOrder().some(function(k){ return getCat(k).label.toLocaleLowerCase("tr-TR") === lower; });
+    if (dup){ toast("Bu adda bir kategori zaten var"); Sound.play("error"); return; }
+    settings.categories = customCats().concat([{ k:"c" + Date.now().toString(36), label:name, color:catColor, icon:catIcon }]);
+    saveSettings();
+    render();
+    toast("Kategori eklendi"); Sound.play("add");
+  }
+  function deleteCategory(k){
+    var label = getCat(k).label;
+    var used = payments.filter(function(p){ return p.cat === k; }).length;
+    var msg = used ? '"' + label + '" silinecek; ' + used + ' ödeme "Kategorisiz"e taşınacak. Emin misin?'
+                   : '"' + label + '" kategorisi silinecek. Emin misin?';
+    if (!confirm(msg)) return;
+    payments.forEach(function(p){ if (p.cat === k) p.cat = "diger"; });
+    settings.categories = customCats().filter(function(x){ return x.k !== k; });
+    saveSettings(); save();
+    render(); toast("Kategori silindi"); Sound.play("del");
   }
 
   function viewSettings(){
@@ -2014,9 +2177,31 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       + '<p class="hint">Kapalıyken Binance kuru için istek gönderilmez; son kur cihazda saklanır ve çevrimdışı gösterilir.</p>'
       + '</div>';
 
+    /* Kategoriler */
+    var cmSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+    html += '<div class="card"><h3>Kategoriler</h3>';
+    CAT_ORDER.forEach(function(k){
+      var c = CATS[k];
+      html += '<div class="cm-row"><span class="cm-ico" style="background:' + c.color + '22;color:' + c.color + '">' + cmSvg + c.icon + '</svg></span><span class="cm-nm">' + esc(c.label) + '</span><span class="cm-kind">Varsayılan</span></div>';
+    });
+    customCats().forEach(function(c){
+      html += '<div class="cm-row"><span class="cm-ico" style="background:' + c.color + '22;color:' + c.color + '">' + cmSvg + (CAT_ICONS[c.icon] || CAT_ICONS.tag) + '</svg></span><span class="cm-nm">' + esc(c.label) + '</span><button class="btn danger cm-del" data-cat="' + esc(c.k) + '" type="button">Sil</button></div>';
+    });
+    html += '<div class="set-col"><span class="lbl">Yeni kategori</span>'
+      + '<div class="cm-swatches">' + CAT_COLORS.map(function(c, i){
+          return '<button type="button" class="cm-sw' + (c === catColor ? " on" : "") + '" style="background:' + c + '" data-color="' + c + '" aria-label="' + ["Mor","Turkuaz","Yeşil","Sarı","Pembe","Gül","Turuncu","Gri"][i] + '"></button>';
+        }).join("") + '</div>'
+      + '<div class="cm-icons">' + Object.keys(CAT_ICONS).map(function(k, i){
+          return '<button type="button" class="cm-ic' + (k === catIcon ? " on" : "") + '" data-icon="' + k + '" aria-label="' + ["Etiket","Pati","Kitap","Kalp","Hediye","Araba","Uçak","Yıldız"][i] + ' ikonu">' + cmSvg + CAT_ICONS[k] + '</svg></button>';
+        }).join("") + '</div>'
+      + '<div class="cm-add"><input id="catName" type="text" maxlength="24" placeholder="Kategori adı (örn. Evcil Hayvan)" aria-label="Yeni kategori adı" /><button class="btn primary" id="catAddBtn" type="button">Ekle</button></div>'
+      + '<p class="hint">Özel kategoriler yedeklere dahil edilir; silinen kategorinin ödemeleri "Kategorisiz"e taşınır.</p>'
+      + '</div></div>';
+
     /* Data */
     html += '<div class="card"><h3>Veri</h3>'
       + '<div class="set-row"><div class="txt"><b>JSON dışa aktar</b><span>Tüm ödemeleri yedek dosyası olarak indir.</span></div><button class="btn" id="exportBtn" type="button">Dışa Aktar</button></div>'
+      + '<div class="set-row"><div class="txt"><b>CSV dışa aktar</b><span>Excel / Google Sheets için tablo olarak indir.</span></div><button class="btn" id="csvBtn" type="button">Dışa Aktar</button></div>'
       + '<div class="set-row"><div class="txt"><b>JSON içe aktar</b><span>Yedek dosyasından verileri geri yükle.</span></div><button class="btn" id="importBtn" type="button">İçe Aktar</button></div>'
       + '<input type="file" id="importFile" accept="application/json,.json" hidden />'
       + '<div class="set-row"><div class="txt"><b>Tüm veriyi sıfırla</b><span>Tüm kayıtları kalıcı olarak siler (boş başlangıç).</span></div><button class="btn danger" id="resetBtn" type="button">Sıfırla</button></div>'
@@ -2067,7 +2252,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     fab.hidden = tab !== "pay";
     bell.setAttribute("data-empty", payments.some(function(p){ return p.status!=="done"; }) ? "0" : "1");
 
-    if (tab === "pay" || tab === "sum") attachMonthSwipe();
+    if (tab === "pay" || tab === "sum" || (tab === "year" && settings.yearMode === "cal")) attachMonthSwipe();
     animateNumbers();
     animateRing();
     animateGauge();
@@ -2125,7 +2310,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (kind === "add" || kind === "edit"){
       var p = kind === "edit" ? byId(id) : null;
       editId = kind === "edit" ? id : null;
-      var opts = CAT_ORDER.map(function(k){ return '<option value="' + k + '"' + (p && p.cat===k ? " selected":"") + '>' + CATS[k].label + '</option>'; }).join("");
+      var opts = catOrder().map(function(k){ return '<option value="' + esc(k) + '"' + (p && p.cat===k ? " selected":"") + '>' + esc(getCat(k).label) + '</option>'; }).join("");
       sheetBody.innerHTML = '<h3>' + (kind==="edit"?"Ödemeyi Düzenle":"Yeni Ödeme") + '</h3>'
         + '<form id="addForm" novalidate>'
         + '<label class="fl"><span>Kategori</span><select name="cat" required>' + opts + '</select></label>'
@@ -2184,7 +2369,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (!items.length) return '<p class="hint">Şu an bekleyen ödeme yok. Her şey kontrol altında.</p>';
     var html = "";
     items.forEach(function(p){
-      var c = CATS[p.cat] || CATS.fatura, s = STATUS[p.status];
+      var c = getCat(p.cat), s = STATUS[p.status];
       html += '<div class="notif"><i class="dot" style="background:' + c.color + '"></i>'
         + '<div><b>' + esc(c.label) + ' · ' + s.t + '</b><span>' + dayLabel(p.due) + (p.note ? ' · ' + esc(p.note) : '') + '</span></div>'
         + '<span class="amt od-nowrap">' + tl(p.amount) + '</span></div>';
@@ -2242,7 +2427,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     } else if (act === "edit"){
       openSheet("edit", id);
     } else if (act === "del"){
-      if (!confirm("Bu ödeme silinsin mi?\n" + (CATS[p.cat] ? CATS[p.cat].label : "Ödeme") + " · " + tl(p.amount) + " · " + dayLabel(p.due))) return;
+      if (!confirm("Bu ödeme silinsin mi?\n" + getCat(p.cat).label + " · " + tl(p.amount) + " · " + dayLabel(p.due))) return;
       payments = payments.filter(function(x){ return x.id !== id; });
       save(); render(); toast("Ödeme silindi"); Sound.play("del");
     }
@@ -2250,6 +2435,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 
   /* ---------- Events ---------- */
   view.addEventListener("keydown", function(e){
+    if (e.key === "Enter" && e.target && e.target.id === "catName"){ e.preventDefault(); addCategory(); return; }
     if(e.key!=="Enter" && e.key!==" ") return;
     var act=e.target.closest(".gauge-segment[data-k], .cat-row[data-k]");
     if(act){ e.preventDefault(); Sound.play("tick"); selectDonut(act.getAttribute("data-k")); }
@@ -2273,12 +2459,29 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (btn.id === "alertGo"){
       filter = "late"; render(); toast("Gecikmiş ödemeler gösteriliyor"); return;
     }
+    var ym = btn.closest("[data-ymode]");
+    if (ym){ settings.yearMode = ym.getAttribute("data-ymode"); saveSettings(); calSelDay = null; render(); return; }
     var chip = btn.closest(".chip");
     if (chip){ filter = chip.getAttribute("data-filter"); render(); return; }
     var col = btn.closest(".ycol");
     if (col){ month = +col.getAttribute("data-month"); tab = "pay"; render(); return; }
+    if (btn.hasAttribute("data-day")){ calSelDay = btn.getAttribute("data-day"); Sound.play("tick"); render(); return; }
+    if (btn.classList.contains("cal-item")){ openSheet("edit", +btn.getAttribute("data-id")); return; }
     if (btn.id === "notifBtn"){ requestNotif(); return; }
     if (btn.id === "exportBtn"){ exportJSON(); return; }
+    if (btn.id === "csvBtn"){ exportCSV(); return; }
+    if (btn.id === "catAddBtn"){ addCategory(); return; }
+    if (btn.classList.contains("cm-del")){ deleteCategory(btn.getAttribute("data-cat")); return; }
+    if (btn.classList.contains("cm-sw")){
+      catColor = btn.getAttribute("data-color");
+      Array.prototype.forEach.call(view.querySelectorAll(".cm-sw"), function(x){ x.classList.toggle("on", x === btn); });
+      return;
+    }
+    if (btn.classList.contains("cm-ic")){
+      catIcon = btn.getAttribute("data-icon");
+      Array.prototype.forEach.call(view.querySelectorAll(".cm-ic"), function(x){ x.classList.toggle("on", x === btn); });
+      return;
+    }
     if (btn.id === "importBtn"){ document.getElementById("importFile").click(); return; }
     if (btn.id === "resetBtn"){
       if (confirm("Tüm ödemeler kalıcı olarak silinecek. Emin misin?")){
@@ -2466,7 +2669,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     var sub = cat === "fatura" ? String(fd.get("sub") || "") : "";
     if (cat === "fatura" && !sub) sub = guessBillSub(note);
 
-    if (!CATS[cat] || !Number.isFinite(amount) || !due || !isValidISODate(due)){
+    if (!hasCat(cat) || !Number.isFinite(amount) || !due || !isValidISODate(due)){
       err.textContent = "Kategori, geçerli bir tutar ve vade girmelisin.";
       err.hidden = false;
       return;
@@ -2503,13 +2706,39 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
   }
   function exportJSON(){
     try {
-      var blob = new Blob([JSON.stringify({ version:1, exportedAt:new Date().toISOString(), billTypes:settings.billTypes || [], payments:payments }, null, 2)], { type:"application/json" });
+      var blob = new Blob([JSON.stringify({ version:1, exportedAt:new Date().toISOString(), billTypes:settings.billTypes || [], categories:settings.categories || [], payments:payments }, null, 2)], { type:"application/json" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url; a.download = backupFileName(Date.now());
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
       toast("Yedek indirildi");
+    } catch(e){ toast("Dışa aktarma başarısız"); }
+  }
+
+  /* Excel/Sheets tr-TR: BOM + noktalı virgül + virgüllü ondalık; tüm alanlar tırnaklı. */
+  function buildCSV(list){
+    var rows = list.slice().sort(function(a,b){ return a.due < b.due ? -1 : a.due > b.due ? 1 : 0; });
+    function q(s){ return '"' + String(s == null ? "" : s).replace(/"/g, '""') + '"'; }
+    function dstr(s){ if (!isValidISODate(s)) return ""; var a = s.split("-"); return a[2] + "." + a[1] + "." + a[0]; }
+    var out = ["Vade;Kategori;Tutar;Durum;Ödenme Tarihi;Not"];
+    rows.forEach(function(p){
+      var c = getCat(p.cat);
+      var amount = (Number(p.amount) || 0).toFixed(2).replace(".", ",");
+      var paid = p.status === "done" ? dstr(p.paidAt || p.due) : "";
+      out.push([q(dstr(p.due)), q(c.label), q(amount), q((STATUS[p.status] || STATUS.wait).t), q(paid), q(p.note)].join(";"));
+    });
+    return "﻿" + out.join("\r\n");
+  }
+  function exportCSV(){
+    try {
+      var blob = new Blob([buildCSV(payments)], { type:"text/csv;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = backupFileName(Date.now()).replace(/\.json$/, ".csv");
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      toast("CSV indirildi");
     } catch(e){ toast("Dışa aktarma başarısız"); }
   }
 
@@ -2520,6 +2749,14 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (!Array.isArray(data) && data.version != null && data.version !== 1) throw new Error("unsupported-version");
     var list = Array.isArray(data) ? data : data.payments;
     if (!Array.isArray(list)) throw new Error("bad-list");
+    /* Özel kategoriler: hem cihazdaki hem de yedekle gelen tanımlar geçerli sayılır;
+       aksi halde yedekteki özel kategori ödemeleri "diger"e düşerdi. */
+    var validCats = {};
+    Object.keys(CATS).forEach(function(k){ validCats[k] = 1; });
+    (Array.isArray(settings.categories) ? settings.categories : []).forEach(function(c){ if (c && typeof c.k === "string" && c.k) validCats[c.k] = 1; });
+    if (!Array.isArray(data) && Array.isArray(data.categories)){
+      data.categories.forEach(function(c){ if (c && typeof c.k === "string" && c.k) validCats[c.k] = 1; });
+    }
     var seen = {}, skipped = 0, out = [];
     list.forEach(function(p, i){
       if (!p || typeof p !== "object"){ skipped += 1; return; }
@@ -2533,7 +2770,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
       var repeat = p.repeat === "monthly" ? "monthly" : "once";
       var item = {
         id:id,
-        cat: CATS[p.cat] ? p.cat : "diger",
+        cat: validCats[p.cat] ? p.cat : "diger",
         amount:amount,
         due:p.due,
         status: ["done","wait","late"].indexOf(p.status) !== -1 ? p.status : "wait",
@@ -2578,6 +2815,25 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
           if (added) saveSettings();
         } catch(e){}
       }
+      /* Yedekle gelen özel kategorileri ekle (varsayılanlarla veya mevcutlarla aynı koda sahip olanlar atlanır). */
+      if (data && Array.isArray(data.categories)){
+        try {
+          var addedCat = false;
+          data.categories.forEach(function(c){
+            if (!c || typeof c.k !== "string" || !c.k || CATS[c.k] || typeof c.label !== "string" || !c.label) return;
+            var exists = (settings.categories || []).some(function(x){ return x.k === c.k; });
+            if (!exists){
+              settings.categories = (settings.categories || []).concat([{
+                k:c.k, label:c.label,
+                color:/^#[0-9a-fA-F]{6}$/.test(c.color) ? c.color : "#94a3b8",
+                icon:CAT_ICONS[c.icon] ? c.icon : "tag"
+              }]);
+              addedCat = true;
+            }
+          });
+          if (addedCat) saveSettings();
+        } catch(e){}
+      }
       var commit = function(){
         var previous = payments;
         payments = imported;
@@ -2602,7 +2858,7 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
     if (button){ button.disabled = true; button.textContent = "Yedekleniyor…"; }
     try {
       var date = new Date(ts);
-      var blob = new Blob([JSON.stringify({ version:1, exportedAt:date.toISOString(), billTypes:settings.billTypes || [], payments:payments }, null, 2)], { type:"application/json" });
+      var blob = new Blob([JSON.stringify({ version:1, exportedAt:date.toISOString(), billTypes:settings.billTypes || [], categories:settings.categories || [], payments:payments }, null, 2)], { type:"application/json" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url; a.download = backupFileName(ts);

@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
 
-const source = fs.readFileSync("index.html", "utf8");
+const source = fs.readFileSync("index.html", "utf8") + fs.readFileSync("app.js", "utf8");
 
 // Sürüm denetimi version.json'a dayanır: dosya index.html'deki VERSION ile eşleşmeli.
 {
@@ -159,6 +159,28 @@ async function testCSVExport() {
   // Ödenmemiş kayıtta ödenme tarihi boş; not içindeki ; ve " CSV kurallarına göre kaçar.
   assert.strictEqual(lines[3], '"05.03.2026";"Fatura";"1250,50";"Bekliyor";"";"Elektrik; ""ocak"""');
   assert.strictEqual(ctx.buildCSV([]), "﻿Vade;Kategori;Tutar;Durum;Ödenme Tarihi;Not");
+  const formula = ctx.buildCSV([{ cat: "fatura", amount: 1, due: "2026-01-01", status: "wait", note: "=HYPERLINK(\"https://example.test\")" }]);
+  assert.ok(/;"'=HYPERLINK\(/.test(formula), "CSV formulas must be neutralized before export");
+}
+
+async function testImportedBillIconsAreAllowlisted() {
+  const icons = {
+    elektrik: "<path d=\"M1 1\"/>",
+    dogalgaz: "<path d=\"M2 2\"/>",
+    su: "<path d=\"M3 3\"/>",
+    internet: "<circle cx=\"1\" cy=\"1\" r=\"1\"/>",
+    telefon: "<rect x=\"1\" y=\"1\"/>",
+    generic: "<rect x=\"2\" y=\"2\"/>"
+  };
+  const ctx = context({
+    BILL_ICON_PATHS: icons,
+    BILL_ICON_BACKGROUNDS: { elektrik: "#fff", generic: "#eee" }
+  });
+  run(ctx, between("function billIconHTML", "function billTypes") + "this.normalizeBillTypes=normalizeBillTypes;");
+  const [safe] = ctx.normalizeBillTypes([{ k: "custom1", label: "Aidat", ico: "<img src=x onerror=alert(1)>", bg: "red\" onmouseover=\"alert(1)" }]);
+  assert.strictEqual(safe.ico.includes("<img"), false, "untrusted icon markup must be ignored");
+  assert.strictEqual(safe.bg, "#eee", "untrusted background CSS must be ignored");
+  assert.ok(safe.ico.includes("<rect x=\"2\""), "unknown bill types use the generic static icon");
 }
 
 async function testCustomCategories() {
@@ -225,6 +247,7 @@ async function testCustomCategories() {
   await testImportTransaction();
   await testMonthlyRepeats();
   await testCSVExport();
+  await testImportedBillIconsAreAllowlisted();
   await testCustomCategories();
   console.log("critical flows: OK");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

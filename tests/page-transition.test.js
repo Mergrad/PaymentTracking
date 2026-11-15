@@ -1,7 +1,7 @@
 const assert = require("assert");
 const fs = require("fs");
 
-const source = fs.readFileSync("index.html", "utf8");
+const source = fs.readFileSync("index.html", "utf8") + fs.readFileSync("app.js", "utf8");
 const transitionCss = source.slice(
   source.indexOf("/* === Sekme / ay geçişi === */"),
   source.indexOf("/* === Fatura türü çipleri + detay kutusu === */")

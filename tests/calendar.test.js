@@ -2,7 +2,7 @@ const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
 
-const source = fs.readFileSync("index.html", "utf8");
+const source = fs.readFileSync("app.js", "utf8");
 
 function between(start, end) {
   const from = source.indexOf(start);

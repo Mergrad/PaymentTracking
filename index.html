@@ -485,6 +485,9 @@ body.light-theme .cal-day.today{color:#dc2626}
   linear-gradient(180deg,#0b1224,#070b16 40%,#04060d);
   display:flex;align-items:center;justify-content:center;padding:24px}
 .lock[hidden]{display:none}
+.lock-startup{width:100%;max-width:300px;text-align:center;color:var(--muted);font-size:12px}
+.lock-startup .logo{margin:0 auto 14px;width:54px;height:54px;border-radius:18px}
+.lock-startup[hidden],.lock-card[hidden]{display:none}
 .lock-card{width:100%;max-width:300px;text-align:center}
 .lock .logo{margin:0 auto 18px;width:54px;height:54px;border-radius:18px}
 .lock .logo svg{width:28px;height:28px}
@@ -887,8 +890,12 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<div class="lock" id="lock" hidden>
-  <div class="lock-card">
+<div class="lock" id="lock" aria-busy="true">
+  <div class="lock-startup" id="lockStartup">
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#08101f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></div>
+    <span id="lockStartupText">Hesap ekranı hazırlanıyor…</span>
+  </div>
+  <div class="lock-card" id="lockCard" hidden>
     <div class="logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="#08101f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/>

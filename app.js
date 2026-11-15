@@ -476,14 +476,21 @@
     biometricButton.title = biometricButton.disabled ? "Parmak izi girişini Ayarlar bölümünden etkinleştir" : "Parmak iziyle giriş";
     document.getElementById("lockErr").hidden = true;
     document.getElementById("lockForm").hidden = false;
+    document.getElementById("lockStartup").hidden = true;
+    document.getElementById("lockCard").hidden = false;
+    document.getElementById("lock").setAttribute("aria-busy", "false");
     document.getElementById("lock").hidden = false;
     (registering ? name : email).focus();
   }
   function hideLock(){ document.getElementById("lock").hidden = true; }
   function lockError(message){ var err = document.getElementById("lockErr"); err.textContent = message; err.hidden = false; }
   function enterUnlockedApp(){
-    hideLock();
-    if (appStarted){ render(); return; }
+    if (appStarted){ hideLock(); render(); return; }
+    document.getElementById("lockCard").hidden = true;
+    document.getElementById("lockStartup").hidden = false;
+    document.getElementById("lock").hidden = false;
+    document.getElementById("lock").setAttribute("aria-busy", "true");
+    document.getElementById("lockStartupText").textContent = "Hesap açılıyor…";
     loadSettings(); applyMotionSetting(); setupTheme(); loadCachedFx();
     if (lastFx !== null){ var fxValEl = document.getElementById("fxValue"); if (fxValEl) fxValEl.textContent = fmtFx(lastFx); }
     applyFxVisibility(); startApp();
@@ -2271,10 +2278,16 @@
     } catch(e){}
     load().then(function(){
       render();
+      hideLock();
+      document.getElementById("lock").setAttribute("aria-busy", "false");
       if (wantAdd) openSheet("add");
       scheduleReminderCheck();
       checkAutoBackup();
       if (settings.fx !== false) fetchUSDTRY();
+    }).catch(function(){
+      appStarted = false;
+      showLock("login");
+      lockError("Kayıtlar yüklenemedi. Tekrar giriş yapıp deneyin.");
     });
   }
 

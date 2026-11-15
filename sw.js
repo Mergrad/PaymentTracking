@@ -2,8 +2,8 @@
 const CACHE_PREFIX = "odeme-takip-shell-";
 const META_CACHE = "odeme-takip-meta";
 const META_KEY = new Request("./active-shell");
-const ASSETS = ["./", "./index.html", "./payments.js", "./vault.js", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-192.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
-const VERSIONED_ASSETS = ["./index.html", "./payments.js", "./vault.js", "./app.js", "./manifest.json"];
+const ASSETS = ["./", "./index.html", "./payments.js", "./vault.js", "./account.js", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-192.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
+const VERSIONED_ASSETS = ["./index.html", "./payments.js", "./vault.js", "./account.js", "./app.js", "./manifest.json"];
 const NETWORK_TIMEOUT = 4000;
 let activeCacheName = null;
 

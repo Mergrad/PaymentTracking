@@ -504,8 +504,15 @@ body.light-theme .cal-day.today{color:#dc2626}
 .lock-form input{width:100%;min-height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--stroke-2);background:var(--surface);color:var(--text)}
 .lock-form .btn{width:100%;justify-content:center;min-height:48px}
 .lock-secondary{width:100%;margin-top:10px;justify-content:center}
-#recoveryPanel[hidden]{display:none}
-#recoveryCodeOutput{width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px solid var(--stroke-2);background:var(--surface);color:var(--text);font-size:12px;overflow-wrap:anywhere}
+.lock-account-switch{display:block;margin:14px auto 0;border:0;background:none;color:#a5b4fc;font:inherit;font-size:12px;cursor:pointer}
+.lock-bio{width:58px;height:58px;margin:14px auto 0;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(165,180,252,.35);background:rgba(99,102,241,.12);color:#c7d2fe}
+.lock-bio svg{width:27px;height:27px}
+.lock-bio:disabled{opacity:.42;cursor:not-allowed}
+.account-password{margin-top:10px;border-top:1px solid var(--stroke);padding-top:10px}
+.account-password summary{font-size:12px;font-weight:650;color:var(--muted);cursor:pointer}
+.account-password .fields{display:grid;gap:8px;margin-top:10px}
+.account-password input{width:100%;min-height:42px;padding:0 12px;border-radius:11px;border:1px solid var(--stroke-2);background:var(--surface-2);color:var(--text)}
+#legacyPassword[hidden]{display:none}
 
 /* iOS install banner */
 .ios-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + var(--safe-b) + 12px);
@@ -757,12 +764,15 @@ body.light-theme .gauge-needle path,body.light-theme .gauge-needle .needle-knob{
 
 /* === Fatura türü çipleri + detay kutusu === */
 .subchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.bill-type-icon{width:16px;height:16px;vertical-align:-3px;flex:none}
+.bill-type-icon{width:17px;height:17px;display:block;flex:none}
 .schip-wrap{position:relative;display:inline-flex}
 .schip{display:inline-flex;cursor:pointer}
 .schip input{position:absolute;opacity:0;pointer-events:none}
-.schip span,.schip.add{display:inline-flex;align-items:center;padding:9px 13px;border-radius:999px;border:1px solid var(--stroke);background:var(--surface-2,rgba(255,255,255,.05));color:var(--text);font-size:12.5px;font-weight:700;transition:background .2s,border-color .2s,transform .15s}
+.schip span,.schip.add{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:999px;border:1px solid var(--stroke);background:var(--surface-2,rgba(255,255,255,.05));color:var(--text);font-size:12px;font-weight:700;transition:background .2s,border-color .2s,transform .15s}
+.bill-chip-icon{width:27px;height:27px;flex:0 0 27px;display:grid;place-items:center;border-radius:50%;color:var(--bill-color);background:var(--bill-bg)}
+.bill-chip-icon .bill-type-icon{width:16px;height:16px}
 .schip input:checked + span{background:linear-gradient(135deg,#6366f1,#22d3ee);color:#06101f;border-color:transparent}
+.schip input:checked + span .bill-chip-icon{color:#10162b;background:rgba(255,255,255,.38)}
 .schip:active span,.schip.add:active{transform:scale(.96)}
 .schip.add{border-style:dashed;color:var(--cyan);cursor:pointer;font-family:inherit}
 .schip-x{position:absolute;top:-6px;right:-4px;width:20px;height:20px;border-radius:50%;border:1px solid var(--stroke);background:var(--bg,#0b1020);color:var(--muted);font-size:13px;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0}
@@ -884,28 +894,27 @@ body.light-theme .subbox .t{background:rgba(15,23,42,.08)}
         <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/>
       </svg>
     </div>
-    <h2 id="lockTitle">Kasa parolası</h2>
-    <p class="sub" id="lockSub">Ödemelerin cihazında şifreli saklanır.</p>
+    <h2 id="lockTitle">Hesabına giriş yap</h2>
+    <p class="sub" id="lockSub">Ödemelerini bu cihazdaki hesabınla aç.</p>
     <form class="lock-form" id="lockForm">
-      <input id="lockPassword" type="password" autocomplete="current-password" minlength="12" maxlength="128" placeholder="Parola" required />
-      <input id="lockConfirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Parolayı tekrar yaz" hidden />
-      <button class="btn primary" id="lockSubmitBtn" type="submit">Kasayı aç</button>
+      <input id="profileName" type="text" autocomplete="name" maxlength="60" placeholder="Adın" hidden />
+      <input id="profileEmail" type="email" autocomplete="email" maxlength="254" placeholder="E-posta adresi" required />
+      <input id="lockPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="Şifre" required />
+      <input id="lockConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Şifreyi tekrar yaz" hidden />
+      <input id="legacyPassword" type="password" autocomplete="current-password" maxlength="128" placeholder="Önceki uygulama şifresi (varsa)" hidden />
+      <button class="btn primary" id="lockSubmitBtn" type="submit">Giriş yap</button>
     </form>
-    <button class="btn lock-secondary" id="passkeyUnlockBtn" type="button" hidden>Parmak izi / cihaz doğrulamasıyla aç</button>
-    <button class="btn lock-secondary" id="recoveryModeBtn" type="button" hidden>Kurtarma anahtarı kullan</button>
-    <div id="recoveryPanel" hidden>
-      <p class="hint">Bu anahtar kasanın tek seferlik kurtarma yoludur. Güvenli bir yerde sakla; bu ekranda bir daha gösterilmeyecek.</p>
-      <textarea id="recoveryCodeOutput" readonly rows="3" aria-label="Kurtarma anahtarı"></textarea>
-      <button class="btn primary lock-secondary" id="downloadRecoveryBtn" type="button">Kurtarma anahtarını indir</button>
-      <button class="btn lock-secondary" id="continueRecoveryBtn" type="button" disabled>Anahtarı indirdim, devam et</button>
-    </div>
+    <button class="lock-bio" id="passkeyUnlockBtn" type="button" aria-label="Parmak iziyle giriş" title="Parmak iziyle giriş" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 11a2 2 0 0 0-2 2c0 3-1 5.5-2 7"/><path d="M14 13c0 4-.5 6-1.5 8"/><path d="M6.5 17C7 15.5 7 14 7 13a5 5 0 0 1 10 0c0 1.5-.1 3-.4 4.5"/><path d="M4 14v-1a8 8 0 0 1 16 0v1"/><path d="M12 3a10 10 0 0 0-10 10v1"/></svg>
+    </button>
+    <button class="lock-account-switch" id="accountModeBtn" type="button">Hesabın yok mu? Yeni hesap oluştur</button>
     <p class="err" id="lockErr" hidden></p>
-    <p class="lock-foot" id="lockFoot"></p>
+    <p class="lock-foot" id="lockFoot">Profil bu cihazda saklanır. E-posta doğrulaması ve eşitleme yoktur.</p>
   </div>
 </div>
 
 <script src="./payments.js"></script>
-<script src="./vault.js"></script>
+<script src="./account.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

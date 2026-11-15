@@ -177,7 +177,7 @@ async function testImportedBillIconsAreAllowlisted() {
     BILL_ICON_BACKGROUNDS: { elektrik: "#fff", generic: "#eee" }
   });
   run(ctx, between("function billIconHTML", "function billTypes") + "this.normalizeBillTypes=normalizeBillTypes;");
-  const [safe] = ctx.normalizeBillTypes([{ k: "custom1", label: "Aidat", ico: "<img src=x onerror=alert(1)>", bg: "red\" onmouseover=\"alert(1)" }]);
+  const [safe] = ctx.normalizeBillTypes([{ k: "custom1", label: "Özel Tür", ico: "<img src=x onerror=alert(1)>", bg: "red\" onmouseover=\"alert(1)" }]);
   assert.strictEqual(safe.ico.includes("<img"), false, "untrusted icon markup must be ignored");
   assert.strictEqual(safe.bg, "#eee", "untrusted background CSS must be ignored");
   assert.ok(safe.ico.includes("<rect x=\"2\""), "unknown bill types use the generic static icon");

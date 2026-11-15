@@ -7,8 +7,8 @@
   var BACKUP_DB = "odeme-takip-backups";
   var BACKUP_STORE = "snapshots";
   var MAX_BACKUPS = 5;
-  var VERSION = "2.11.0";
-  var localStorage = window.OdemeVault.storage;
+  var VERSION = "2.12.0";
+  var localStorage = window.OdemeAccount.storage;
   var MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
   var MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
@@ -137,25 +137,42 @@
     elektrik:'<path d="m13 2-3 8h7l-6 12 1-9H6l7-11Z"/>',
     dogalgaz:'<path d="M12 22a7 7 0 0 0 7-7c0-4-4-6-4-11-4 3-2 6-5 8-1-2-1-3-1-5-3 3-5 6-5 9a8 8 0 0 0 8 6Z"/><path d="M12 22a3 3 0 0 0 3-3c0-2-2-3-2-5-2 2-4 3-4 5a3 3 0 0 0 3 3Z"/>',
     su:'<path d="M12 3c-2 4-7 8-7 12a7 7 0 0 0 14 0c0-4-5-8-7-12Z"/><path d="M9 16a3 3 0 0 0 3 3"/>',
-    internet:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',
-    telefon:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/>',
+    internet:'<path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1"/>',
+    telefon:'<path d="M7 3H4a1 1 0 0 0-1 1c0 9.4 7.6 17 17 17a1 1 0 0 0 1-1v-3l-5-2-2 3a14 14 0 0 1-7-7l3-2-3-6Z"/>',
+    bina:'<path d="M4 21V4l8-2v19M12 8h8v13M2 21h20"/><path d="M7 7h2M7 11h2M7 15h2M15 12h2M15 16h2"/>',
+    kart:'<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/>',
+    sigorta:'<path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6Z"/><path d="m9 12 2 2 4-4"/>',
+    abonelik:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/>',
     generic:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>'
   };
-  var BILL_ICON_BACKGROUNDS = { elektrik:"rgba(251,191,36,.16)", dogalgaz:"rgba(249,115,22,.16)", su:"rgba(56,189,248,.16)", internet:"rgba(129,140,248,.16)", telefon:"rgba(244,114,182,.16)", generic:"rgba(148,163,184,.16)" };
+  var BILL_ICON_COLORS = { elektrik:"#eab308", dogalgaz:"#f97316", su:"#0ea5e9", internet:"#6366f1", telefon:"#db2777", bina:"#8b5cf6", kart:"#db2777", sigorta:"#ca8a04", abonelik:"#059669", generic:"#64748b" };
+  var BILL_ICON_BACKGROUNDS = { elektrik:"rgba(234,179,8,.15)", dogalgaz:"rgba(249,115,22,.15)", su:"rgba(14,165,233,.15)", internet:"rgba(99,102,241,.15)", telefon:"rgba(219,39,119,.15)", bina:"rgba(139,92,246,.15)", kart:"rgba(219,39,119,.15)", sigorta:"rgba(202,138,4,.15)", abonelik:"rgba(5,150,105,.15)", generic:"rgba(100,116,139,.15)" };
   function billIconHTML(k){ return '<svg class="bill-type-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (BILL_ICON_PATHS[k] || BILL_ICON_PATHS.generic) + '</svg>'; }
-  function billIconKey(k){ return Object.prototype.hasOwnProperty.call(BILL_ICON_PATHS, k) ? k : "generic"; }
+  function billIconKey(k, label){
+    var text = (String(k || "") + " " + String(label || "")).toLocaleLowerCase("tr-TR").replace(/[ıİ]/g,"i").replace(/[ğĞ]/g,"g").replace(/[üÜ]/g,"u").replace(/[şŞ]/g,"s").replace(/[öÖ]/g,"o").replace(/[çÇ]/g,"c");
+    if (/elektrik/.test(text)) return "elektrik";
+    if (/dogalgaz|gaz/.test(text)) return "dogalgaz";
+    if (/(^|\s)su(\s|$)|water/.test(text)) return "su";
+    if (/internet|wifi|wi-fi|fiber/.test(text)) return "internet";
+    if (/telefon|gsm|mobil|hat/.test(text)) return "telefon";
+    if (/kira|aidat|apartman|site|konut|bina/.test(text)) return "bina";
+    if (/kart|kredi|banka/.test(text)) return "kart";
+    if (/sigorta/.test(text)) return "sigorta";
+    if (/abonelik|uyelik|subscription/.test(text)) return "abonelik";
+    return Object.prototype.hasOwnProperty.call(BILL_ICON_PATHS, k) ? k : "generic";
+  }
   function normalizeBillTypes(items){
     if (!Array.isArray(items)) return [];
     var seen = Object.create(null);
     return items.slice(0, 100).filter(function(t){
       if (!t || typeof t.k !== "string" || !/^[a-zA-Z0-9_-]{1,40}$/.test(t.k) || seen[t.k] || typeof t.label !== "string" || !t.label.trim()) return false;
       seen[t.k] = true; return true;
-    }).map(function(t){ return { k:t.k, label:t.label.trim().slice(0, 40), ico:billIconHTML(billIconKey(t.k)), bg:BILL_ICON_BACKGROUNDS[billIconKey(t.k)] }; });
+    }).map(function(t){ var iconKey = billIconKey(t.k, t.label); return { k:t.k, label:t.label.trim().slice(0, 40), ico:billIconHTML(iconKey), bg:BILL_ICON_BACKGROUNDS[iconKey], color:BILL_ICON_COLORS[iconKey] }; });
   }
-  function billTypes(){ return BILL_DEFAULT.map(function(t){ return { k:t.k, label:t.label, ico:billIconHTML(t.k), bg:BILL_ICON_BACKGROUNDS[t.k] }; }).concat(normalizeBillTypes(settings.billTypes)); }
+  function billTypes(){ return BILL_DEFAULT.map(function(t){ return { k:t.k, label:t.label, ico:billIconHTML(t.k), bg:BILL_ICON_BACKGROUNDS[t.k], color:BILL_ICON_COLORS[t.k] }; }).concat(normalizeBillTypes(settings.billTypes)); }
   function billType(k){
     var t = billTypes().filter(function(x){ return x.k === k; })[0];
-    return t || { k:"", label:"Diğer", ico:billIconHTML("generic"), bg:BILL_ICON_BACKGROUNDS.generic };
+    return t || { k:"", label:"Diğer", ico:billIconHTML("generic"), bg:BILL_ICON_BACKGROUNDS.generic, color:BILL_ICON_COLORS.generic };
   }
   function guessBillSub(note){
     var n = String(note || "").toLocaleLowerCase("tr-TR");
@@ -431,129 +448,82 @@
     });
   }
 
-  /* ---------- Şifreli kasa ve giriş ---------- */
-  var lockMode = "", lockFirstPassword = "", lockAttempts = 0, appStarted = false;
-  var LOCKOUT_KEY = "odeme-takip-vault-lockout";
+  /* ---------- Yerel hesap girişi ---------- */
+  var lockMode = "login", appStarted = false;
+  var LOCKOUT_KEY = "odeme-takip-account-lockout";
   function showLock(mode){
-    lockMode = mode;
-    if (mode !== "setup-confirm" && mode !== "password-confirm") lockFirstPassword = "";
-    var lock = document.getElementById("lock");
+    lockMode = mode === "setup" || mode === "register" ? "register" : "login";
+    var registering = lockMode === "register";
+    var account = window.OdemeAccount.getProfile();
+    var name = document.getElementById("profileName"), email = document.getElementById("profileEmail");
     var password = document.getElementById("lockPassword"), confirmPass = document.getElementById("lockConfirm");
-    var passkey = document.getElementById("passkeyUnlockBtn");
-    document.getElementById("lockForm").hidden = false;
-    document.getElementById("recoveryPanel").hidden = true;
-    document.getElementById("recoveryModeBtn").hidden = mode !== "login";
+    name.hidden = !registering; name.required = registering;
+    confirmPass.hidden = !registering; confirmPass.required = registering;
+    var legacyPassword = document.getElementById("legacyPassword");
+    legacyPassword.hidden = !registering || !window.OdemeAccount.hasLegacyVault();
+    legacyPassword.value = "";
+    email.value = account ? account.email : "";
+    password.value = ""; confirmPass.value = "";
+    password.minLength = 8; password.placeholder = "Şifre";
+    password.autocomplete = registering ? "new-password" : "current-password";
+    document.getElementById("lockTitle").textContent = registering ? "Yeni hesap oluştur" : "Hesabına giriş yap";
+    document.getElementById("lockSub").textContent = registering ? "Profilini bu cihazda oluştur." : "E-posta ve şifrenle devam et.";
+    document.getElementById("lockSubmitBtn").textContent = registering ? "Hesap oluştur" : "Giriş yap";
+    document.getElementById("accountModeBtn").textContent = registering ? "Zaten hesabın var mı? Giriş yap" : "Hesabın yok mu? Yeni hesap oluştur";
+    var biometricButton = document.getElementById("passkeyUnlockBtn");
+    biometricButton.hidden = registering || !window.PublicKeyCredential || !window.isSecureContext;
+    biometricButton.disabled = !account || !account.hasBiometric;
+    biometricButton.title = biometricButton.disabled ? "Parmak izi girişini Ayarlar bölümünden etkinleştir" : "Parmak iziyle giriş";
     document.getElementById("lockErr").hidden = true;
-    password.value = ""; confirmPass.value = ""; password.minLength = mode === "recovery-login" ? 1 : 12;
-    password.type = "password"; password.placeholder = mode === "login" ? "Kasa parolası" : "En az 12 karakterli parola";
-    confirmPass.hidden = mode !== "setup-confirm" && mode !== "password-confirm";
-    password.autocomplete = mode === "login" ? "current-password" : "new-password";
-    document.getElementById("lockTitle").textContent = mode === "login" ? "Kasa parolası" : mode === "password-change" || mode === "password-confirm" ? "Yeni parola" : "Güvenli kasa oluştur";
-    document.getElementById("lockSub").textContent = mode === "login" ? "Ödeme verilerin bu cihazda şifreli saklanır." : mode === "password-change" || mode === "password-confirm" ? "En az 12 karakter kullan." : "En az 12 karakterli parola belirle. Parola ve kurtarma anahtarını kaybedersen veriler açılamaz.";
-    document.getElementById("lockSubmitBtn").textContent = mode === "login" ? "Kasayı aç" : mode === "password-change" || mode === "password-confirm" ? "Parolayı kaydet" : "Devam et";
-    passkey.hidden = mode !== "login" || !window.OdemeVault.hasPasskey() || !window.PublicKeyCredential || !navigator.credentials;
-    lock.hidden = false;
-    password.focus();
+    document.getElementById("lockForm").hidden = false;
+    document.getElementById("lock").hidden = false;
+    (registering ? name : email).focus();
   }
   function hideLock(){ document.getElementById("lock").hidden = true; }
   function lockError(message){ var err = document.getElementById("lockErr"); err.textContent = message; err.hidden = false; }
-  function loginFailed(){
-    var state = {}; try { state = JSON.parse(window.localStorage.getItem(LOCKOUT_KEY) || "{}"); } catch(e){}
-    var attempts = (Number(state.attempts) || 0) + 1;
-    if (attempts >= 3){
-      var until = Date.now() + 30000;
-      try { window.localStorage.setItem(LOCKOUT_KEY, JSON.stringify({ attempts:0, until:until })); } catch(e){}
-      lockError("Çok fazla deneme. 30 saniye bekleyin.");
-    } else {
-      try { window.localStorage.setItem(LOCKOUT_KEY, JSON.stringify({ attempts:attempts, until:0 })); } catch(e){}
-      lockError("Parola yanlış veya kasa verisi açılamadı.");
-    }
-  }
   function enterUnlockedApp(){
     hideLock();
-    loadSettings();
-    applyMotionSetting();
-    setupTheme();
-    loadCachedFx();
+    if (appStarted){ render(); return; }
+    loadSettings(); applyMotionSetting(); setupTheme(); loadCachedFx();
     if (lastFx !== null){ var fxValEl = document.getElementById("fxValue"); if (fxValEl) fxValEl.textContent = fmtFx(lastFx); }
-    applyFxVisibility();
-    migrateBackupSnapshots().then(startApp).catch(function(){
-      showLock("login");
-      lockError("Cihaz içi yedekler şifrelenemedi. Verileri korumak için uygulama açılmadı.");
-    });
+    applyFxVisibility(); startApp();
   }
   function lockSubmit(e){
     if (e) e.preventDefault();
-    var password = document.getElementById("lockPassword").value;
-    var confirmPass = document.getElementById("lockConfirm").value;
     document.getElementById("lockErr").hidden = true;
-    if (lockMode === "login"){
-      var lockState = {}; try { lockState = JSON.parse(window.localStorage.getItem(LOCKOUT_KEY) || "{}"); } catch(err){}
-      var until = Number(lockState.until) || 0;
-      if (until > Date.now()){ lockError("Çok fazla deneme. " + Math.ceil((until - Date.now()) / 1000) + " saniye bekleyin."); return; }
-      window.OdemeVault.unlockPassword(password).then(function(){
-        try { window.localStorage.removeItem(LOCKOUT_KEY); } catch(err){}
-        document.getElementById("lockPassword").value = ""; lockAttempts = 0; enterUnlockedApp();
-      }).catch(loginFailed);
-      return;
+    var email = document.getElementById("profileEmail").value;
+    var password = document.getElementById("lockPassword").value;
+    var action;
+    if (lockMode === "register"){
+      var confirmPass = document.getElementById("lockConfirm").value;
+      if (password !== confirmPass){ lockError("Şifreler eşleşmiyor."); return; }
+      action = window.OdemeAccount.register(document.getElementById("profileName").value, email, password, document.getElementById("legacyPassword").value);
+    } else {
+      var state = {}; try { state = JSON.parse(window.localStorage.getItem(LOCKOUT_KEY) || "{}"); } catch(err){}
+      if ((Number(state.until) || 0) > Date.now()){ lockError("Çok fazla deneme. " + Math.ceil((state.until - Date.now()) / 1000) + " saniye bekle."); return; }
+      action = window.OdemeAccount.login(email, password);
     }
-    if (lockMode === "recovery-login"){
-      window.OdemeVault.unlockRecovery(password).then(function(){ showLock("password-change"); document.getElementById("lockSub").textContent = "Kasa açıldı. Güvenlik için yeni parola belirle."; })
-        .catch(loginFailed);
-      return;
-    }
-    if (password.length < 12){ lockError("Parola en az 12 karakter olmalı."); return; }
-    if (lockMode === "setup" || lockMode === "password-change"){
-      lockFirstPassword = password;
-      showLock(lockMode === "setup" ? "setup-confirm" : "password-confirm");
-      return;
-    }
-    if (password !== lockFirstPassword || confirmPass !== lockFirstPassword){
-      lockFirstPassword = ""; showLock(lockMode === "setup-confirm" ? "setup" : "password-change"); lockError("Parolalar eşleşmedi. Tekrar deneyin."); return;
-    }
-    var action = lockMode === "setup-confirm" ? window.OdemeVault.initialize(password) : window.OdemeVault.changePassword(password);
-    action.then(function(result){
-      lockFirstPassword = "";
-      if (lockMode === "setup-confirm" && result && result.recoveryCode){
-        document.getElementById("lockPassword").value = ""; document.getElementById("lockConfirm").value = "";
-        document.getElementById("lockForm").hidden = true;
-        document.getElementById("recoveryModeBtn").hidden = true;
-        document.getElementById("recoveryPanel").hidden = false;
-        document.getElementById("recoveryCodeOutput").value = result.recoveryCode;
-        document.getElementById("continueRecoveryBtn").disabled = true;
-        document.getElementById("lockTitle").textContent = "Kurtarma anahtarını sakla";
-        document.getElementById("lockSub").textContent = "Parolanı unutursan verilerini bu anahtar açabilir.";
-        lockMode = "recovery-save";
-        return;
+    action.then(function(){
+      try { window.localStorage.removeItem(LOCKOUT_KEY); } catch(err){}
+      document.getElementById("lockPassword").value = "";
+      document.getElementById("lockConfirm").value = "";
+      document.getElementById("legacyPassword").value = "";
+      enterUnlockedApp();
+    }).catch(function(error){
+      if (lockMode === "login"){
+        var state = {}; try { state = JSON.parse(window.localStorage.getItem(LOCKOUT_KEY) || "{}"); } catch(err){}
+        var attempts = (Number(state.attempts) || 0) + 1;
+        try { window.localStorage.setItem(LOCKOUT_KEY, JSON.stringify(attempts >= 5 ? { attempts:0, until:Date.now()+30000 } : { attempts:attempts, until:0 })); } catch(err){}
       }
-      if (!appStarted) enterUnlockedApp(); else { hideLock(); render(); toast("Parola güncellendi"); }
-    }).catch(function(err){ lockError(err && err.message ? err.message : "Güvenli kasa kaydedilemedi."); });
+      lockError(error && error.message ? error.message : "İşlem tamamlanamadı.");
+    });
   }
   document.getElementById("lockForm").addEventListener("submit", lockSubmit);
+  document.getElementById("accountModeBtn").addEventListener("click", function(){ showLock(lockMode === "register" ? "login" : "register"); });
   document.getElementById("passkeyUnlockBtn").addEventListener("click", function(){
     document.getElementById("lockErr").hidden = true;
-    window.OdemeVault.unlockPasskey().then(enterUnlockedApp).catch(function(err){ lockError(err && err.message ? err.message : "Cihaz doğrulaması başarısız."); });
+    window.OdemeAccount.loginBiometric().then(enterUnlockedApp).catch(function(err){ lockError(err && err.message ? err.message : "Parmak izi doğrulaması başarısız."); });
   });
-  document.getElementById("recoveryModeBtn").addEventListener("click", function(){
-    lockMode = "recovery-login";
-    document.getElementById("lockTitle").textContent = "Kurtarma anahtarı";
-    document.getElementById("lockSub").textContent = "Kurtarma anahtarını gir. Sonra yeni parola belirleyeceksin.";
-    document.getElementById("lockPassword").type = "text";
-    document.getElementById("lockPassword").placeholder = "Kurtarma anahtarı";
-    document.getElementById("lockPassword").value = "";
-    document.getElementById("lockPassword").minLength = 1;
-    document.getElementById("passkeyUnlockBtn").hidden = true;
-    document.getElementById("recoveryModeBtn").hidden = true;
-  });
-  document.getElementById("downloadRecoveryBtn").addEventListener("click", function(){
-    var blob = new Blob([document.getElementById("recoveryCodeOutput").value + "\n"], { type:"text/plain;charset=utf-8" });
-    var url = URL.createObjectURL(blob), a = document.createElement("a");
-    a.href = url; a.download = "odeme-takip-kurtarma-anahtari.txt";
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    document.getElementById("continueRecoveryBtn").disabled = false;
-    toast("Kurtarma anahtarı indirildi; güvenli yerde sakla");
-  });
-  document.getElementById("continueRecoveryBtn").addEventListener("click", function(){ document.getElementById("recoveryCodeOutput").value = ""; enterUnlockedApp(); });
 
   /* ---------- IndexedDB backups ---------- */
   function withIDB(cb, errCb){
@@ -569,9 +539,9 @@
     var ts = Number(timestamp) || Date.now();
     return new Promise(function(resolve, reject){
       var snap = { ts:ts, date:new Date(ts).toISOString(), payments:JSON.parse(JSON.stringify(payments)), count:payments.length };
-      window.OdemeVault.encryptData(snap).then(function(payload){
+      Promise.resolve().then(function(){
         withIDB(function(db){
-          var row = { ts:ts, date:snap.date, count:snap.count, encrypted:true, payload:payload };
+          var row = { ts:ts, date:snap.date, count:snap.count, payments:snap.payments };
           var tx;
           try {
             tx = db.transaction(BACKUP_STORE, "readwrite");
@@ -601,33 +571,12 @@
       tx.objectStore(BACKUP_STORE).getAll().onsuccess = function(e){
         Promise.all(e.target.result.map(function(row){
           if (!row.encrypted) return row;
+          if (!window.OdemeVault) return null;
           return window.OdemeVault.decryptData(row.payload).catch(function(){ return null; });
         })).then(function(rows){ cb(rows.filter(Boolean).sort(function(a,b){ return b.ts - a.ts; })); });
       };
     }, function(){ cb([]); });
   }
-  function migrateBackupSnapshots(){
-    return new Promise(function(resolve, reject){
-      withIDB(function(db){
-        var readTx = db.transaction(BACKUP_STORE, "readonly"), request = readTx.objectStore(BACKUP_STORE).getAll();
-        request.onsuccess = function(){
-          var legacy = request.result.filter(function(row){ return row && !row.encrypted && Array.isArray(row.payments); });
-          if (!legacy.length){ resolve(true); return; }
-          Promise.all(legacy.map(function(row){
-            return window.OdemeVault.encryptData({ ts:row.ts, date:row.date, payments:row.payments, count:row.count });
-          })).then(function(payloads){
-            var writeTx = db.transaction(BACKUP_STORE, "readwrite"), store = writeTx.objectStore(BACKUP_STORE);
-            legacy.forEach(function(row, i){ store.put({ ts:row.ts, date:row.date, count:row.count, encrypted:true, payload:payloads[i] }); });
-            writeTx.oncomplete = function(){ resolve(true); };
-            writeTx.onerror = function(){ reject(writeTx.error || new Error("Yedek geçişi başarısız")); };
-            writeTx.onabort = function(){ reject(writeTx.error || new Error("Yedek geçişi iptal edildi")); };
-          }).catch(reject);
-        };
-        request.onerror = function(){ reject(request.error || new Error("Yedekler okunamadı")); };
-      }, function(){ resolve(true); });
-    });
-  }
-
   /* ---------- Yaklaşan Ödemeler: vadesine 1 gün kalanlar ---------- */
   function soonHTML(noRise){
     var t = todayMid();
@@ -824,7 +773,7 @@
     var html = '<h3><span>FATURA DETAYI</span><span>' + list.length + ' kalem · ' + tl(total) + '</span></h3>';
     list.forEach(function(r, i){
       var t = billType(r.k), pc = total ? Math.round(r.v / total * 100) : 0;
-      html += '<div class="r"><div class="ic" style="background:' + t.bg + '">' + t.ico + '</div>'
+      html += '<div class="r"><div class="ic" style="background:' + t.bg + ';color:' + t.color + '">' + t.ico + '</div>'
         + '<div class="n">' + esc(t.label) + ' <small>' + r.n + ' ödeme · %' + pc + '</small></div><div class="v">' + tl(r.v) + '</div>'
         + '<div class="t"><span data-w="' + pc + '" style="background:' + shades[i % shades.length] + '"></span></div></div>';
     });
@@ -930,11 +879,12 @@
       html += '<div class="empty"><div class="e-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg></div><b>Bu filtrede ödeme yok</b><span>Harika, her şey kontrol altında.</span></div>';
     } else {
       shown.forEach(function(p,i){
-        var c = getCat(p.cat), s = STATUS[p.status];
-        html += '<article class="pay ' + (p.status==="done"?"done":"") + '" data-id="' + p.id + '" style="--accent:' + c.color + ';animation-delay:' + (i*45) + 'ms">'
-          + '<div class="p-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + c.icon + '</svg></div>'
+        var c = getCat(p.cat), s = STATUS[p.status], bill = p.cat === "fatura" && p.sub ? billType(p.sub) : null;
+        var accent = bill ? bill.color : c.color;
+        html += '<article class="pay ' + (p.status==="done"?"done":"") + '" data-id="' + p.id + '" style="--accent:' + accent + ';animation-delay:' + (i*45) + 'ms">'
+          + '<div class="p-ico">' + (bill ? bill.ico : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + c.icon + '</svg>') + '</div>'
           + '<div class="p-body">'
-          + '<div class="p-row1"><span class="p-cat">' + esc(c.label) + '</span><span class="amt od-nowrap">' + tl(p.amount) + '</span></div>'
+          + '<div class="p-row1"><span class="p-cat">' + esc(c.label + (bill ? " · " + bill.label : "")) + '</span><span class="amt od-nowrap">' + tl(p.amount) + '</span></div>'
           + '<div class="p-row2"><span class="due od-nowrap">Vade: ' + dayLabel(p.due) + '</span><span class="badge ' + s.c + '">' + s.t + '</span></div>'
           /* Eski kayıtlarda paidAt yok: boş kalmasın diye vade tarihi gösterilir; yeni ödemelerde gerçek tarih. */
           + (p.status==="done" ? '<div class="p-paid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Ödenme tarihi: ' + dayLabel(p.paidAt || p.due) + '</div>' : '')
@@ -1240,21 +1190,28 @@
 
   function viewSettings(){
     var notifOk = ("Notification" in window) && Notification.permission === "granted";
-    var hasPasskey = window.OdemeVault.hasPasskey();
+    var profile = window.OdemeAccount.getProfile() || { name:"", email:"", hasBiometric:false };
+    var hasBiometric = profile.hasBiometric;
     var bakInterval = settings.backupInterval || "off";
     var notifyDays = settings.notifyDays || 3;
 
     var html = '<div class="page">'
       + '<div class="sec-head" style="margin-top:4px"><h2>Ayarlar</h2><span class="count">v' + VERSION + '</span></div>';
 
-    html += '<div class="card"><h3>Güvenlik</h3>'
-      + '<div class="set-row"><div class="txt"><b>Şifreli kasa</b><span>Ödeme verileri cihazında AES-GCM ile şifreli saklanır.</span></div><span class="pill-on">Açık</span></div>'
-      + '<div class="set-row"><div class="txt"><b>Kasa parolasını değiştir</b><span>En az 12 karakterli parola belirle.</span></div><button class="btn" id="changePasswordBtn" type="button">Değiştir</button></div>'
-      + '<div class="set-row"><div class="txt"><b>' + (hasPasskey ? 'Biyometrik açma' : 'Parmak izi / cihaz doğrulaması') + '</b><span>' + (hasPasskey ? 'Bu cihazda passkey kayıtlı; işletim sistemi doğrulaması kullanılır.' : 'Destek varsa Windows Hello, Touch ID veya cihazın kullandığı doğrulamayla açılır.') + '</span></div>'
-      + (hasPasskey ? '<button class="btn danger" id="removePasskeyBtn" type="button">Kaldır</button>' : window.PublicKeyCredential ? '<button class="btn primary" id="addPasskeyBtn" type="button">Kur</button>' : '<span class="hint">Desteklenmiyor</span>') + '</div>'
-      + '<p class="hint">Biyometrik veri uygulamaya aktarılmaz. Uygun cihaz yoksa parola ile giriş yapabilirsin. Unutulan parola verileri kurtarılamaz; düzenli JSON yedeğini güvenli yerde sakla.</p>'
+    html += '<div class="card"><h3>Hesap Profili</h3>'
+      + '<div class="set-row"><div class="txt"><b>' + esc(profile.name) + '</b><span>' + esc(profile.email) + '</span></div><button class="btn" id="signOutBtn" type="button">Çıkış yap</button></div>'
+      + '<details class="account-password"><summary>Şifreyi değiştir</summary><div class="fields">'
+      + '<input id="currentAccountPassword" type="password" autocomplete="current-password" placeholder="Mevcut şifre" />'
+      + '<input id="newAccountPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Yeni şifre (en az 8 karakter)" />'
+      + '<input id="confirmAccountPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Yeni şifreyi tekrar yaz" />'
+      + '<button class="btn" id="saveAccountPasswordBtn" type="button">Şifreyi kaydet</button></div></details>'
+      + '<p class="hint">Hesap ve ödeme kayıtları bu cihazda tutulur. E-posta doğrulaması ve cihazlar arası eşitleme yoktur.</p>'
       + '</div>';
-    html += '</div>';
+    html += '<div class="card"><h3>Giriş Güvenliği</h3>'
+      + '<div class="set-row"><div class="txt"><b>Parmak iziyle giriş</b><span>' + (hasBiometric ? 'Bu cihazda etkin.' : 'Destekleyen cihazlarda parmak izi veya cihaz doğrulaması kullanılır.') + '</span></div>'
+      + (hasBiometric ? '<button class="btn danger" id="removeBiometricBtn" type="button">Kaldır</button>' : window.PublicKeyCredential && window.isSecureContext ? '<button class="btn primary" id="addBiometricBtn" type="button">Etkinleştir</button>' : '<span class="hint">Bu cihazda desteklenmiyor</span>') + '</div>'
+      + '<p class="hint">Şifre yalnızca hesap girişini doğrular; uygulama verileri bu tarayıcıda normal şekilde saklanır. Biyometrik doğrulamayı cihazın işletim sistemi yapar.</p>'
+      + '</div>';
 
     /* Notifications */
     html += '<div class="card"><h3>Bildirimler</h3>'
@@ -1348,7 +1305,7 @@
       + '<button class="btn grad-border" id="settingsInstall" type="button">Yükle</button></div>'
       + '<div class="kv"><span class="k">Sürüm</span><span class="v">' + VERSION + '</span></div>'
       + '<div class="kv"><span class="k">Kayıt sayısı</span><span class="v">' + payments.length + '</span></div>'
-      + '<div class="kv"><span class="k">Depolama</span><span class="v">Şifreli cihaz kasası</span></div>'
+      + '<div class="kv"><span class="k">Depolama</span><span class="v">Bu cihaz</span></div>'
       + '<div class="set-row"><div class="txt"><b>Güncellemeyi denetle</b><span>Yeni sürüm var mı diye hemen kontrol et.</span></div><button class="btn" id="checkUpdateBtn" type="button">Denetle</button></div>'
       + '<div class="set-row"><div class="txt"><b>Önbelleği temizle ve yenile</b><span>Sorun çıkarsa kullan; kayıtlar silinmez.</span></div><button class="btn danger" id="clearCacheBtn" type="button">Temizle</button></div>'
       + '</div>'
@@ -1417,7 +1374,6 @@
     clearTimeout(toast._t);
     toast._t = setTimeout(function(){ t.classList.remove("on"); }, 2400);
   }
-  window.addEventListener("odeme-vault-storage-error", function(){ toast("Şifreli kasaya kaydedilemedi. Cihaz depolama alanını kontrol et."); });
 
   /* ---------- Sheet ---------- */
   var scrim = document.getElementById("scrim");
@@ -1434,7 +1390,7 @@
     var types = billTypes();
     var builtin = BILL_DEFAULT.length;
     types.forEach(function(t, i){
-      html += '<span class="schip-wrap"><label class="schip"><input type="radio" name="sub" value="' + esc(t.k) + '"' + (sel === t.k ? " checked" : "") + ' /><span>' + t.ico + ' ' + esc(t.label) + '</span></label>'
+      html += '<span class="schip-wrap"><label class="schip"><input type="radio" name="sub" value="' + esc(t.k) + '"' + (sel === t.k ? " checked" : "") + ' /><span><i class="bill-chip-icon" style="--bill-color:' + t.color + ';--bill-bg:' + t.bg + '">' + t.ico + '</i>' + esc(t.label) + '</span></label>'
         + (i >= builtin ? '<button class="schip-x" type="button" data-sub-del="' + esc(t.k) + '" aria-label="' + esc(t.label) + ' türünü sil">×</button>' : '') + '</span>';
     });
     html += '<span class="schip-wrap"><label class="schip"><input type="radio" name="sub" value=""' + (!sel ? " checked" : "") + ' /><span>Diğer</span></label></span>';
@@ -1628,15 +1584,26 @@
     if (btn.id === "backupNowBtn"){ doBackup(); return; }
     if (btn.id === "restoreBtn"){ openSheet("restore"); return; }
     if (btn.id === "soundTestBtn"){ Sound.play("pay"); return; }
-    if (btn.id === "changePasswordBtn"){ showLock("password-change"); return; }
-    if (btn.id === "addPasskeyBtn"){
-      window.OdemeVault.enrollPasskey().then(function(){ render(); toast("Bu cihazda biyometrik açma etkinleştirildi"); })
+    if (btn.id === "signOutBtn"){
+      window.OdemeAccount.signOut(); showLock("login"); return;
+    }
+    if (btn.id === "saveAccountPasswordBtn"){
+      var currentPass = document.getElementById("currentAccountPassword").value;
+      var newPass = document.getElementById("newAccountPassword").value;
+      var confirmNewPass = document.getElementById("confirmAccountPassword").value;
+      if (newPass !== confirmNewPass){ toast("Yeni şifreler eşleşmiyor"); return; }
+      window.OdemeAccount.changePassword(currentPass, newPass).then(function(){ render(); toast("Hesap şifresi güncellendi"); })
+        .catch(function(err){ toast(err && err.message ? err.message : "Şifre değiştirilemedi"); });
+      return;
+    }
+    if (btn.id === "addBiometricBtn"){
+      window.OdemeAccount.enrollBiometric().then(function(){ render(); toast("Parmak iziyle giriş etkinleştirildi"); })
         .catch(function(err){ toast(err && err.message ? err.message : "Biyometrik açma kurulamadı"); });
       return;
     }
-    if (btn.id === "removePasskeyBtn"){
-      if (!confirm("Bu cihazdaki biyometrik açma bağlantısı kaldırılsın mı?")) return;
-      window.OdemeVault.removePasskey().then(function(){ render(); toast("Biyometrik açma kaldırıldı"); });
+    if (btn.id === "removeBiometricBtn"){
+      if (!confirm("Bu cihazdaki parmak izi girişi kaldırılsın mı?")) return;
+      window.OdemeAccount.removeBiometric(); render(); toast("Parmak izi girişi kaldırıldı");
       return;
     }
     if (btn.id === "settingsInstall"){ doInstall(); return; }
@@ -2315,6 +2282,6 @@
   if (fxBtn) fxBtn.addEventListener("click", fetchUSDTRY);
 
   checkDeployedVersion();
-  try { showLock(window.OdemeVault.bootstrap()); }
-  catch(e){ showLock("setup"); document.getElementById("lockPassword").disabled = true; document.getElementById("lockConfirm").disabled = true; document.getElementById("lockSubmitBtn").disabled = true; lockError(e && e.message ? e.message : "Güvenli kasa başlatılamadı."); }
+  try { showLock(window.OdemeAccount.bootstrap()); }
+  catch(e){ showLock("setup"); document.getElementById("lockPassword").disabled = true; document.getElementById("lockConfirm").disabled = true; document.getElementById("lockSubmitBtn").disabled = true; lockError(e && e.message ? e.message : "Hesap girişi başlatılamadı."); }
 })();

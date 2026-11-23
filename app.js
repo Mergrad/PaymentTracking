@@ -1012,7 +1012,9 @@
       + '</div><div class="cal-grid" role="group" aria-label="Vade takvimi">';
     for (var i = 0; i < cal.offset; i++) h += '<span class="cal-empty" aria-hidden="true"></span>';
     cal.days.forEach(function(d){
-      var cls = "cal-day" + (d.items.length ? " has" : "") + (d.iso === tISO ? " today" : "") + (d.iso === calSelDay ? " sel" : "");
+      var dayStatus = d.items.some(function(p){ return p.status === "late"; }) ? "late" :
+        d.items.some(function(p){ return p.status === "wait"; }) ? "wait" : "ok";
+      var cls = "cal-day" + (d.items.length ? " has " + dayStatus : "") + (d.iso === tISO ? " today" : "") + (d.iso === calSelDay ? " sel" : "");
       var dots = "";
       if (d.items.length){
         var seen = {}, colors = [];

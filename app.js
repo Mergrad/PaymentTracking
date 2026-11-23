@@ -1032,7 +1032,7 @@
       if (!sel.items.length) h += '<div class="cal-none">' + sel.day + ' ' + MONTHS[month] + ' için ödeme yok</div>';
       sel.items.forEach(function(p){
         var c = getCat(p.cat), s = STATUS[p.status];
-        h += '<button type="button" class="cal-item" data-id="' + p.id + '"><span class="k"><i style="background:' + c.color + '"></i><span>' + esc(c.label) + (p.note ? ' · ' + esc(p.note) : '') + '</span></span><span class="badge ' + s.c + '">' + s.t + '</span><b>' + tl(p.amount) + '</b></button>';
+        h += '<button type="button" class="cal-item ' + s.c + '" data-id="' + p.id + '"><span class="k"><i aria-hidden="true"></i><span>' + esc(c.label) + (p.note ? ' · ' + esc(p.note) : '') + '</span></span><span class="badge ' + s.c + '">' + s.t + '</span><b>' + tl(p.amount) + '</b></button>';
       });
       h += '</div>';
     } else {

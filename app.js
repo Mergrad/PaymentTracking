@@ -838,6 +838,10 @@
       var rank = { late:0, wait:1, done:2 };
       var la = rank[a.status], lb = rank[b.status];
       if (la!==lb) return la-lb;
+      if (a.status === "done"){
+        var aPaidAt = a.paidAt || a.due, bPaidAt = b.paidAt || b.due;
+        if (aPaidAt !== bPaidAt) return aPaidAt < bPaidAt ? 1 : -1;
+      }
       return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
     });
 
